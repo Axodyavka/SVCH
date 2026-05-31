@@ -19,7 +19,7 @@ export default function LoginPage() {
     try {
       const data = await authApi.login({ login, password });
       dispatch(setCredentials(data));
-      navigate('/');
+      navigate(data.user?.role === 'admin' ? '/library' : '/');
     } catch (err) {
       setError(err.response?.data?.message || 'Ошибка входа');
     } finally {

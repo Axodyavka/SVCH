@@ -7,4 +7,5 @@ export const adminApi = {
   unblockUser: (id) => api.put(`/admin/users/${id}/unblock`).then((r) => r.data),
   getSuggestions: () => api.get('/admin/suggestions').then((r) => r.data),
   approveSuggestion: (id) => api.put(`/admin/suggestions/${id}/approve`).then((r) => r.data),
+  rejectSuggestion: (id) => api.put(`/admin/suggestions/${id}/reject`).then((r) => r.data),
 };

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -14,6 +14,14 @@ import ProgressPage from './pages/ProgressPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import { setTheme } from './store/slices/uiSlice';
+
+function HomePage() {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  if (isAuthenticated && user?.role === 'admin') {
+    return <Navigate to="/library" replace />;
+  }
+  return <DashboardPage />;
+}
 
 function App() {
   const dispatch = useDispatch();
@@ -32,7 +40,7 @@ function App() {
       <Header />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/library" element={<LibraryPage />} />

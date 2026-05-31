@@ -90,17 +90,37 @@ router.put('/suggestions/:id/approve', async (req, res, next) => {
   try {
     const suggestion = await CompositionSuggestion.findByPk(req.params.id);
     if (!suggestion) return res.status(404).json({ message: 'Предложение не найдено' });
+    if (suggestion.status !== 'pending') {
+      return res.status(400).json({ message: 'Предложение уже обработано' });
+    }
 
     await Composition.create({
       title: suggestion.title,
       composer: suggestion.composer,
       instrument: suggestion.instrument || 'piano',
       difficulty: 'easy',
+      material_type: 'composition',
     });
 
     suggestion.status = 'approved';
     await suggestion.save();
     res.json({ message: 'Произведение добавлено в библиотеку' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/suggestions/:id/reject', async (req, res, next) => {
+  try {
+    const suggestion = await CompositionSuggestion.findByPk(req.params.id);
+    if (!suggestion) return res.status(404).json({ message: 'Предложение не найдено' });
+    if (suggestion.status !== 'pending') {
+      return res.status(400).json({ message: 'Предложение уже обработано' });
+    }
+
+    suggestion.status = 'rejected';
+    await suggestion.save();
+    res.json({ message: 'Предложение отклонено' });
   } catch (error) {
     next(error);
   }

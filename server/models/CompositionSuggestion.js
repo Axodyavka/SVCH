@@ -21,6 +21,10 @@ const CompositionSuggestion = sequelize.define(
       type: DataTypes.STRING(150),
       allowNull: false,
     },
+    instrument: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
     status: {
       type: DataTypes.ENUM('pending', 'approved', 'rejected'),
       defaultValue: 'pending',

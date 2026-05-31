@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { compositionsApi } from '../api/compositionsApi';
+import { adminApi } from '../api/adminApi';
 
 const INSTRUMENTS = [
   { value: '', label: 'Все инструменты' },
@@ -10,34 +11,50 @@ const INSTRUMENTS = [
   { value: 'flute', label: 'Флейта' },
 ];
 
+const EMPTY_ADMIN_FORM = {
+  title: '',
+  composer: '',
+  instrument: 'piano',
+  difficulty: 'easy',
+  material_type: 'composition',
+  sheet_notes: '',
+};
+
+function fileNameFromPath(storedPath) {
+  if (!storedPath) return '';
+  return storedPath.split(/[/\\]/).pop();
+}
+
 export default function LibraryPage() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const isAdmin = user?.role === 'admin';
 
   const [compositions, setCompositions] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
   const [search, setSearch] = useState('');
   const [instrument, setInstrument] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [suggestForm, setSuggestForm] = useState({ title: '', composer: '' });
   const [suggestMsg, setSuggestMsg] = useState('');
-  const [adminForm, setAdminForm] = useState({
-    title: '',
-    composer: '',
-    instrument: 'piano',
-    difficulty: 'easy',
-    midi_path: '',
-    sheet_notes: '',
-  });
+  const [adminForm, setAdminForm] = useState(EMPTY_ADMIN_FORM);
   const [editingId, setEditingId] = useState(null);
-  const [referenceFiles, setReferenceFiles] = useState({});
+  const [editingFiles, setEditingFiles] = useState({
+    midi_path: null,
+    sheet_file_path: null,
+    reference_audio_path: null,
+  });
+  const [midiFile, setMidiFile] = useState(null);
+  const [sheetFile, setSheetFile] = useState(null);
+  const [referenceAudioFile, setReferenceAudioFile] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     try {
       setLoading(true);
       const data = await compositionsApi.getAll({ search, instrument });
       setCompositions(data);
-    } catch (e) {
+    } catch {
       setError('Не удалось загрузить библиотеку');
     } finally {
       setLoading(false);
@@ -48,6 +65,40 @@ export default function LibraryPage() {
     const timer = setTimeout(load, 300);
     return () => clearTimeout(timer);
   }, [search, instrument]);
+
+  const loadSuggestions = async () => {
+    if (!isAdmin) return;
+    try {
+      const data = await adminApi.getSuggestions();
+      setSuggestions(data);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    loadSuggestions();
+  }, [isAdmin]);
+
+  const resetAdminForm = () => {
+    setEditingId(null);
+    setAdminForm(EMPTY_ADMIN_FORM);
+    setEditingFiles({ midi_path: null, sheet_file_path: null, reference_audio_path: null });
+    setMidiFile(null);
+    setSheetFile(null);
+    setReferenceAudioFile(null);
+  };
+
+  const buildFormData = () => {
+    const formData = new FormData();
+    Object.entries(adminForm).forEach(([key, value]) => {
+      formData.append(key, value ?? '');
+    });
+    if (midiFile) formData.append('midi', midiFile);
+    if (sheetFile) formData.append('sheet', sheetFile);
+    if (referenceAudioFile) formData.append('referenceAudio', referenceAudioFile);
+    return formData;
+  };
 
   const handleSuggest = async (e) => {
     e.preventDefault();
@@ -64,26 +115,22 @@ export default function LibraryPage() {
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSaving(true);
     try {
+      const formData = buildFormData();
       if (editingId) {
-        await compositionsApi.update(editingId, adminForm);
+        await compositionsApi.update(editingId, formData);
         setSuggestMsg('Произведение обновлено');
       } else {
-        await compositionsApi.create(adminForm);
+        await compositionsApi.create(formData);
         setSuggestMsg('Произведение добавлено');
       }
-      setEditingId(null);
-      setAdminForm({
-        title: '',
-        composer: '',
-        instrument: 'piano',
-        difficulty: 'easy',
-        midi_path: '',
-        sheet_notes: '',
-      });
+      resetAdminForm();
       load();
     } catch (err) {
       setError(err.response?.data?.message || 'Ошибка сохранения');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -94,9 +141,17 @@ export default function LibraryPage() {
       composer: composition.composer,
       instrument: composition.instrument,
       difficulty: composition.difficulty,
-      midi_path: composition.midi_path || '',
+      material_type: composition.material_type || 'composition',
       sheet_notes: composition.sheet_notes || '',
     });
+    setEditingFiles({
+      midi_path: composition.midi_path,
+      sheet_file_path: composition.sheet_file_path,
+      reference_audio_path: composition.reference_audio_path,
+    });
+    setMidiFile(null);
+    setSheetFile(null);
+    setReferenceAudioFile(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -105,24 +160,31 @@ export default function LibraryPage() {
     try {
       await compositionsApi.remove(id);
       setSuggestMsg('Произведение удалено');
+      if (editingId === id) resetAdminForm();
       load();
     } catch (err) {
       setError(err.response?.data?.message || 'Ошибка удаления');
     }
   };
 
-  const handleReferenceUpload = async (compositionId) => {
-    const file = referenceFiles[compositionId];
-    if (!file) return;
+  const handleApproveSuggestion = async (id) => {
     try {
-      const formData = new FormData();
-      formData.append('audio', file);
-      await compositionsApi.uploadReferenceAudio(compositionId, formData);
-      setSuggestMsg('Эталонное аудио загружено');
-      setReferenceFiles((prev) => ({ ...prev, [compositionId]: null }));
+      await adminApi.approveSuggestion(id);
+      setSuggestMsg('Предложение одобрено и добавлено в библиотеку');
+      loadSuggestions();
       load();
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка загрузки эталонного аудио');
+      setError(err.response?.data?.message || 'Ошибка одобрения предложения');
+    }
+  };
+
+  const handleRejectSuggestion = async (id) => {
+    try {
+      await adminApi.rejectSuggestion(id);
+      setSuggestMsg('Предложение отклонено');
+      loadSuggestions();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Ошибка отклонения предложения');
     }
   };
 
@@ -133,76 +195,175 @@ export default function LibraryPage() {
       {isAdmin && (
         <section className="section admin-library-form">
           <h2>{editingId ? 'Редактировать произведение' : 'Добавить произведение или упражнение'}</h2>
-          <form onSubmit={handleAdminSubmit} className="inline-form">
-            <input
-              placeholder="Название"
-              value={adminForm.title}
-              onChange={(e) => setAdminForm((p) => ({ ...p, title: e.target.value }))}
-              required
-            />
-            <input
-              placeholder="Автор / источник"
-              value={adminForm.composer}
-              onChange={(e) => setAdminForm((p) => ({ ...p, composer: e.target.value }))}
-              required
-            />
-            <select
-              value={adminForm.instrument}
-              onChange={(e) => setAdminForm((p) => ({ ...p, instrument: e.target.value }))}
-            >
-              {INSTRUMENTS.filter((x) => x.value).map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={adminForm.difficulty}
-              onChange={(e) => setAdminForm((p) => ({ ...p, difficulty: e.target.value }))}
-            >
-              <option value="easy">Легкий</option>
-              <option value="medium">Средний</option>
-              <option value="hard">Сложный</option>
-            </select>
-            <input
-              placeholder="Путь к MIDI (например uploads/midi/c-major.mid)"
-              value={adminForm.midi_path}
-              onChange={(e) => setAdminForm((p) => ({ ...p, midi_path: e.target.value }))}
-            />
-            <button type="submit" className="btn btn-primary">
-              {editingId ? 'Сохранить изменения' : 'Добавить'}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => {
-                  setEditingId(null);
-                  setAdminForm({
-                    title: '',
-                    composer: '',
-                    instrument: 'piano',
-                    difficulty: 'easy',
-                    midi_path: '',
-                    sheet_notes: '',
-                  });
-                }}
+          <form onSubmit={handleAdminSubmit} className="admin-form">
+            <div className="inline-form">
+              <input
+                placeholder="Название"
+                value={adminForm.title}
+                onChange={(e) => setAdminForm((p) => ({ ...p, title: e.target.value }))}
+                required
+              />
+              <input
+                placeholder="Автор / источник"
+                value={adminForm.composer}
+                onChange={(e) => setAdminForm((p) => ({ ...p, composer: e.target.value }))}
+                required
+              />
+              <select
+                value={adminForm.instrument}
+                onChange={(e) => setAdminForm((p) => ({ ...p, instrument: e.target.value }))}
               >
-                Отменить
-              </button>
-            )}
-          </form>
-          <div className="section">
+                {INSTRUMENTS.filter((x) => x.value).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={adminForm.difficulty}
+                onChange={(e) => setAdminForm((p) => ({ ...p, difficulty: e.target.value }))}
+              >
+                <option value="easy">Легкий</option>
+                <option value="medium">Средний</option>
+                <option value="hard">Сложный</option>
+              </select>
+              <select
+                value={adminForm.material_type}
+                onChange={(e) => setAdminForm((p) => ({ ...p, material_type: e.target.value }))}
+              >
+                <option value="composition">Произведение</option>
+                <option value="exercise">Упражнение</option>
+              </select>
+            </div>
+
+            <div className="file-upload-grid">
+              <label className="file-field">
+                <span>MIDI-файл (.mid)</span>
+                <input
+                  type="file"
+                  accept=".mid,.midi,audio/midi"
+                  onChange={(e) => setMidiFile(e.target.files?.[0] || null)}
+                />
+                {midiFile && <small className="text-muted">Выбран: {midiFile.name}</small>}
+                {!midiFile && editingFiles.midi_path && (
+                  <small className="text-muted">
+                    Загружен: {fileNameFromPath(editingFiles.midi_path)}
+                  </small>
+                )}
+              </label>
+
+              <label className="file-field">
+                <span>Файл нот (PDF, PNG, JPG)</span>
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+                  onChange={(e) => setSheetFile(e.target.files?.[0] || null)}
+                />
+                {sheetFile && <small className="text-muted">Выбран: {sheetFile.name}</small>}
+                {!sheetFile && editingFiles.sheet_file_path && (
+                  <small className="text-muted">
+                    Загружен: {fileNameFromPath(editingFiles.sheet_file_path)}
+                  </small>
+                )}
+              </label>
+
+              <label className="file-field">
+                <span>Эталонное аудио (WAV, MP3)</span>
+                <input
+                  type="file"
+                  accept=".wav,.mp3,audio/wav,audio/mpeg"
+                  onChange={(e) => setReferenceAudioFile(e.target.files?.[0] || null)}
+                />
+                {referenceAudioFile && (
+                  <small className="text-muted">Выбран: {referenceAudioFile.name}</small>
+                )}
+                {!referenceAudioFile && editingFiles.reference_audio_path && (
+                  <small className="text-muted">
+                    Загружен: {fileNameFromPath(editingFiles.reference_audio_path)}
+                  </small>
+                )}
+              </label>
+            </div>
+
             <textarea
               className="notes-textarea"
-              placeholder="Текст нот или описание упражнения (например: гамма до мажор в 2 октавы, метроном 60)"
+              placeholder="Краткое описание упражнения (необязательно)"
               value={adminForm.sheet_notes}
               onChange={(e) => setAdminForm((p) => ({ ...p, sheet_notes: e.target.value }))}
             />
-          </div>
+
+            <div className="inline-form">
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? 'Сохранение…' : editingId ? 'Сохранить изменения' : 'Добавить'}
+              </button>
+              {editingId && (
+                <button type="button" className="btn btn-outline" onClick={resetAdminForm}>
+                  Отменить
+                </button>
+              )}
+            </div>
+          </form>
+
           <p className="text-muted">
-            MIDI нужен для сравнения записей пользователей. Эталонное аудио помогает показать, как должен звучать материал.
+            Выберите файлы на компьютере — они сохраняются на сервере в{' '}
+            <code>server/uploads/</code>. В базе хранится только ссылка на файл. MIDI используется для
+            анализа, файл нот показывается пользователю, эталонное аудио можно открыть и прослушать.
           </p>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="section">
+          <h2>Модерация предложений</h2>
+          {suggestions.length === 0 ? (
+            <p className="empty-text">Нет предложений</p>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Название</th>
+                    <th>Композитор</th>
+                    <th>Инструмент</th>
+                    <th>Автор</th>
+                    <th>Статус</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {suggestions.map((s) => (
+                    <tr key={s.id}>
+                      <td>{s.title}</td>
+                      <td>{s.composer}</td>
+                      <td>{s.instrument || 'piano'}</td>
+                      <td>{s.user?.login}</td>
+                      <td>{s.status}</td>
+                      <td>
+                        {s.status === 'pending' && (
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleApproveSuggestion(s.id)}
+                            >
+                              Одобрить
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              onClick={() => handleRejectSuggestion(s.id)}
+                            >
+                              Отклонить
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       )}
 
@@ -235,12 +396,33 @@ export default function LibraryPage() {
             <h3>{c.title}</h3>
             <p className="text-muted">{c.composer}</p>
             <div className="card-tags">
+              <span className="tag">{c.material_type === 'exercise' ? 'упражнение' : 'произведение'}</span>
               <span className="tag">{c.instrument}</span>
               <span className="tag">{c.difficulty}</span>
             </div>
-            <p className="text-muted">{c.midi_path ? 'MIDI: подключен' : 'MIDI: не добавлен'}</p>
-            {c.reference_audio_path && <p className="text-muted">Эталонное аудио: добавлено</p>}
-            {c.sheet_notes && <p className="text-muted">Ноты/описание: добавлены</p>}
+            <p className="text-muted">{c.midi_path ? 'MIDI: загружен' : 'MIDI: не добавлен'}</p>
+            {c.sheet_file_path && (
+              <p className="text-muted">
+                Ноты:{' '}
+                <a className="inline-link" href={compositionsApi.fileUrl(c.id, 'sheet')} target="_blank" rel="noreferrer">
+                  открыть файл
+                </a>
+              </p>
+            )}
+            {c.reference_audio_path && (
+              <p className="text-muted">
+                Эталон:{' '}
+                <a
+                  className="inline-link"
+                  href={compositionsApi.fileUrl(c.id, 'reference-audio')}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  прослушать
+                </a>
+              </p>
+            )}
+            {c.sheet_notes && <p className="text-muted">{c.sheet_notes}</p>}
 
             {isAuthenticated && !isAdmin && c.midi_path && (
               <a href={`/#/upload?compositionId=${c.id}`} className="btn btn-outline btn-sm card-action">
@@ -255,19 +437,6 @@ export default function LibraryPage() {
                 </button>
                 <button type="button" className="btn btn-outline btn-sm" onClick={() => handleDelete(c.id)}>
                   Удалить
-                </button>
-                <input
-                  type="file"
-                  accept=".wav,.mp3,audio/wav,audio/mpeg"
-                  onChange={(e) =>
-                    setReferenceFiles((prev) => ({
-                      ...prev,
-                      [c.id]: e.target.files?.[0] || null,
-                    }))
-                  }
-                />
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => handleReferenceUpload(c.id)}>
-                  Загрузить эталонное аудио
                 </button>
               </div>
             )}
