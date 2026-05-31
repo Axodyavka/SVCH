@@ -5,7 +5,6 @@
 node_modules/
 
 # Сборка
-dist/
 client/build/
 client/dist/
 server/dist/
@@ -30,7 +29,7 @@ npm-debug.log*
 Thumbs.db
 
 # Загружаемые файлы (аудио пользователей — не в git)
-server/uploads/
+server/uploads/*
 !server/uploads/.gitkeep
 
 # Python
