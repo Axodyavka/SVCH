@@ -66,10 +66,13 @@ async function seed() {
           composer: composers[i % composers.length],
           instrument: instruments[i % instruments.length],
           difficulty: pick(['easy', 'medium', 'hard']),
+          material_type: i === 7 || i === 18 ? 'exercise' : 'composition',
           midi_path: null,
           sheet_notes:
             i === 7
               ? 'Гамма до мажор, 2 октавы, ровные восьмые, темп 60.'
+              : i === 18
+                ? 'Пассаж на ровность пальцев, темп 70, следить за одинаковой длительностью нот.'
               : i === 4
                 ? 'Этюд на легато. Следить за ровным соединением нот.'
                 : null,

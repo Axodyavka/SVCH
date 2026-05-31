@@ -25,11 +25,23 @@ const Composition = sequelize.define(
       type: DataTypes.ENUM('easy', 'medium', 'hard'),
       defaultValue: 'easy',
     },
+    material_type: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: 'composition',
+      validate: {
+        isIn: [['composition', 'exercise']],
+      },
+    },
     midi_path: {
       type: DataTypes.STRING(500),
       allowNull: true,
     },
     reference_audio_path: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    sheet_file_path: {
       type: DataTypes.STRING(500),
       allowNull: true,
     },
