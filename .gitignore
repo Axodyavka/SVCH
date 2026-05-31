@@ -1,0 +1,40 @@
+# Локальные материалы курсовой (не для удалённого репозитория)
+статьи/
+
+# Зависимости
+node_modules/
+
+# Сборка
+dist/
+client/build/
+client/dist/
+server/dist/
+
+# Окружение и секреты
+.env
+.env.local
+.env.*.local
+
+# Логи
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Загружаемые файлы (аудио пользователей — не в git)
+server/uploads/
+!server/uploads/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
