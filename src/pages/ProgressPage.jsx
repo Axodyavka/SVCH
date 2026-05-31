@@ -131,7 +131,9 @@ export default function ProgressPage() {
                     <td>{r.total_score}</td>
                     <td>{new Date(r.created_at).toLocaleDateString('ru-RU')}</td>
                     <td>
-                      <Link to={`/reports/${r.id}`}>Открыть</Link>
+                      <Link to={`/reports/${r.id}`} className="btn btn-outline btn-sm">
+                        Открыть
+                      </Link>
                     </td>
                   </tr>
                 ))}

@@ -133,12 +133,16 @@ export default function ProfilePage() {
         </button>
       </form>
 
-      <div className="form-card">
-        <h2>Настройки интерфейса</h2>
-        <p className="text-muted">Сбросить тему, сортировку и фильтры дат.</p>
-        <button type="button" className="btn btn-outline" onClick={handleResetSettings}>
-          Сбросить настройки
-        </button>
+      <div className="form-card settings-card">
+        <div className="settings-illustration" aria-hidden="true" />
+        <div>
+          <h2>Настройки интерфейса</h2>
+          <p className="text-muted">Сбросить тему, сортировку и фильтры дат.</p>
+          <button type="button" className="btn btn-outline btn-with-icon" onClick={handleResetSettings}>
+            <span className="asset-icon reset-icon" aria-hidden="true" />
+            <span>Сбросить настройки</span>
+          </button>
+        </div>
       </div>
 
       {message && <p className="success-text">{message}</p>}

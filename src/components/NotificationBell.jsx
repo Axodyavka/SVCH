@@ -49,7 +49,7 @@ function NotificationBell() {
     <div className="notification-bell" ref={ref}>
       <button
         type="button"
-        className="btn-icon"
+        className="btn btn-outline btn-icon"
         onClick={() => setOpen((v) => !v)}
         title="Уведомления"
       >

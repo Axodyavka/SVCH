@@ -65,12 +65,16 @@ export default function DashboardPage() {
           <section className="section">
             <div className="section-header">
               <h2>Последние отчёты</h2>
-              <Link to="/progress">Вся история →</Link>
+              <Link to="/progress" className="btn btn-outline btn-sm">
+                Вся история
+              </Link>
             </div>
             {loading ? (
               <p>Загрузка…</p>
             ) : recent.length === 0 ? (
-              <p className="empty-text">Пока нет отчётов. <Link to="/upload">Загрузите запись</Link></p>
+              <p className="empty-text">
+                Пока нет отчётов. <Link to="/upload">Загрузите запись</Link>
+              </p>
             ) : (
               <div className="card-grid">
                 {recent.map((report) => (

@@ -20,7 +20,7 @@ function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <Link to="/" className="logo">
+        <Link to={isAdmin ? '/library' : '/'} className="logo">
           {logoTitle}
         </Link>
         <nav className="nav">
@@ -38,8 +38,9 @@ function Header() {
         </nav>
         <div className="header-actions">
           {isAuthenticated && !isAdmin && <NotificationBell />}
-          <button type="button" className="btn btn-outline" onClick={() => dispatch(toggleTheme())}>
-            Сменить тему
+          <button type="button" className="btn btn-outline btn-with-icon theme-toggle" onClick={() => dispatch(toggleTheme())}>
+            <span className="asset-icon theme-icon" aria-hidden="true" />
+            <span>Сменить тему</span>
           </button>
           {isAuthenticated ? (
             <>
