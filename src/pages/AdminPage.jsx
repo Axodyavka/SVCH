@@ -1,18 +1,11 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
-import { compositionsApi } from '../api/compositionsApi';
 
 export default function AdminPage() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [search, setSearch] = useState('');
-  const [newComposition, setNewComposition] = useState({
-    title: '',
-    composer: '',
-    instrument: 'piano',
-    difficulty: 'easy',
-  });
   const [message, setMessage] = useState('');
 
   const load = async () => {
@@ -43,14 +36,6 @@ export default function AdminPage() {
   const handleApprove = async (id) => {
     await adminApi.approveSuggestion(id);
     setMessage('Произведение добавлено');
-    load();
-  };
-
-  const handleAddComposition = async (e) => {
-    e.preventDefault();
-    await compositionsApi.create(newComposition);
-    setNewComposition({ title: '', composer: '', instrument: 'piano', difficulty: 'easy' });
-    setMessage('Произведение создано');
     load();
   };
 
@@ -164,35 +149,6 @@ export default function AdminPage() {
         )}
       </section>
 
-      <section className="section">
-        <h2>Добавить произведение</h2>
-        <form onSubmit={handleAddComposition} className="inline-form">
-          <input
-            placeholder="Название"
-            value={newComposition.title}
-            onChange={(e) => setNewComposition((p) => ({ ...p, title: e.target.value }))}
-            required
-          />
-          <input
-            placeholder="Композитор"
-            value={newComposition.composer}
-            onChange={(e) => setNewComposition((p) => ({ ...p, composer: e.target.value }))}
-            required
-          />
-          <select
-            value={newComposition.instrument}
-            onChange={(e) => setNewComposition((p) => ({ ...p, instrument: e.target.value }))}
-          >
-            <option value="piano">Фортепиано</option>
-            <option value="violin">Скрипка</option>
-            <option value="guitar">Гитара</option>
-            <option value="flute">Флейта</option>
-          </select>
-          <button type="submit" className="btn btn-primary">
-            Добавить
-          </button>
-        </form>
-      </section>
     </div>
   );
 }
