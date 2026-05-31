@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { compositionsApi } from '../api/compositionsApi';
 import { recordingsApi } from '../api/recordingsApi';
 
 export default function UploadPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [compositions, setCompositions] = useState([]);
   const [compositionId, setCompositionId] = useState('');
   const [file, setFile] = useState(null);
@@ -12,8 +13,17 @@ export default function UploadPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    compositionsApi.getAll().then(setCompositions).catch(() => setError('Не удалось загрузить список'));
-  }, []);
+    const presetId = searchParams.get('compositionId');
+    compositionsApi
+      .getAll()
+      .then((items) => {
+        setCompositions(items);
+        if (presetId && items.some((item) => String(item.id) === String(presetId))) {
+          setCompositionId(String(presetId));
+        }
+      })
+      .catch(() => setError('Не удалось загрузить список'));
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

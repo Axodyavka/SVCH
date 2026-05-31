@@ -6,5 +6,11 @@ export const compositionsApi = {
   create: (data) => api.post('/compositions', data).then((r) => r.data),
   update: (id, data) => api.put(`/compositions/${id}`, data).then((r) => r.data),
   remove: (id) => api.delete(`/compositions/${id}`).then((r) => r.data),
+  uploadReferenceAudio: (id, formData) =>
+    api
+      .post(`/compositions/${id}/reference-audio`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data),
   suggest: (data) => api.post('/compositions/suggest', data).then((r) => r.data),
 };

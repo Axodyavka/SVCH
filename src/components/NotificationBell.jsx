@@ -53,7 +53,7 @@ function NotificationBell() {
         onClick={() => setOpen((v) => !v)}
         title="Уведомления"
       >
-        🔔
+        Уведомления
         {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
       </button>
       {open && (

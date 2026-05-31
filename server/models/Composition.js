@@ -29,6 +29,14 @@ const Composition = sequelize.define(
       type: DataTypes.STRING(500),
       allowNull: true,
     },
+    reference_audio_path: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    sheet_notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     tableName: 'compositions',

@@ -11,12 +11,13 @@ function ScoreBadge({ score }) {
 
 export default function DashboardPage() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === 'admin';
   const [recent, setRecent] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isAdmin) {
       setLoading(false);
       return;
     }
@@ -35,13 +36,15 @@ export default function DashboardPage() {
       }
     };
     load();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isAdmin]);
 
   return (
     <div className="page">
       <h1>Главная</h1>
       <p className="lead">
-        {isAuthenticated
+        {isAuthenticated && isAdmin
+          ? 'Вы вошли как администратор. Используйте раздел управления библиотекой.'
+          : isAuthenticated
           ? `Добро пожаловать, ${user?.login}! Загружайте записи и отслеживайте прогресс.`
           : 'Платформа для обучения музыке с анализом исполнения и рекомендациями.'}
       </p>
@@ -57,7 +60,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {isAuthenticated && (
+      {isAuthenticated && !isAdmin && (
         <>
           <section className="section">
             <div className="section-header">

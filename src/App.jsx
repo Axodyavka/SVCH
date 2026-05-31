@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
-import AdminRoute from './components/AdminRoute';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -13,7 +12,6 @@ import UploadPage from './pages/UploadPage';
 import ReportPage from './pages/ReportPage';
 import ProgressPage from './pages/ProgressPage';
 import ProfilePage from './pages/ProfilePage';
-import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { setTheme } from './store/slices/uiSlice';
 
@@ -41,7 +39,7 @@ function App() {
           <Route
             path="/upload"
             element={
-              <PrivateRoute>
+              <PrivateRoute musicianOnly>
                 <UploadPage />
               </PrivateRoute>
             }
@@ -49,7 +47,7 @@ function App() {
           <Route
             path="/reports/:id"
             element={
-              <PrivateRoute>
+              <PrivateRoute musicianOnly>
                 <ReportPage />
               </PrivateRoute>
             }
@@ -57,7 +55,7 @@ function App() {
           <Route
             path="/progress"
             element={
-              <PrivateRoute>
+              <PrivateRoute musicianOnly>
                 <ProgressPage />
               </PrivateRoute>
             }
@@ -65,17 +63,9 @@ function App() {
           <Route
             path="/profile"
             element={
-              <PrivateRoute>
+              <PrivateRoute musicianOnly>
                 <ProfilePage />
               </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminPage />
-              </AdminRoute>
             }
           />
           <Route path="*" element={<NotFoundPage />} />
