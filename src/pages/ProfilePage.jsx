@@ -16,6 +16,8 @@ export default function ProfilePage() {
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
   const [achievements, setAchievements] = useState([]);
   const [message, setMessage] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -40,14 +42,14 @@ export default function ProfilePage() {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setError('');
+    setPasswordMessage('');
+    setPasswordError('');
     try {
       await authApi.changePassword(passwords);
       setPasswords({ currentPassword: '', newPassword: '' });
-      setMessage('Пароль изменён');
+      setPasswordMessage('Пароль успешно изменён');
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка смены пароля');
+      setPasswordError(err.response?.data?.message || 'Ошибка смены пароля');
     }
   };
 
@@ -130,6 +132,8 @@ export default function ProfilePage() {
         <button type="submit" className="btn btn-outline">
           Изменить пароль
         </button>
+        {passwordMessage && <p className="success-text">{passwordMessage}</p>}
+        {passwordError && <p className="error-text">{passwordError}</p>}
       </form>
 
       <section className="section">
