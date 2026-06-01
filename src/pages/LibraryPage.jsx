@@ -380,7 +380,23 @@ export default function LibraryPage() {
 
       <div className="card-grid">
         {compositions.map((c) => (
-          <article key={c.id} className="card">
+          <article
+            key={c.id}
+            className="card library-card"
+            role={!isAdmin && c.midi_path ? 'button' : undefined}
+            tabIndex={!isAdmin && c.midi_path ? 0 : undefined}
+            onClick={() => {
+              if (!isAdmin && c.midi_path) {
+                window.location.hash = `#/upload?compositionId=${c.id}`;
+              }
+            }}
+            onKeyDown={(e) => {
+              if (!isAdmin && c.midi_path && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                window.location.hash = `#/upload?compositionId=${c.id}`;
+              }
+            }}
+          >
             <h3>{c.title}</h3>
             <p className="text-muted">{c.composer}</p>
             <div className="card-tags">
@@ -432,17 +448,6 @@ export default function LibraryPage() {
         ))}
       </div>
 
-      {isAuthenticated && !isAdmin && (
-        <section className="section suggest-section card">
-          <h2>Предложить произведение</h2>
-          <p className="text-muted">
-            Если в библиотеке нет нужного материала, отправьте заявку с нотами и эталонной записью.
-          </p>
-          <Link to="/suggest" className="btn btn-primary">
-            Открыть форму предложения
-          </Link>
-        </section>
-      )}
     </div>
   );
 }

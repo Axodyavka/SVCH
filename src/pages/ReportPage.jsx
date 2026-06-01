@@ -66,6 +66,13 @@ export default function ReportPage() {
         </div>
       </div>
 
+      {!composition?.midi_path && (
+        <p className="error-text">
+          У произведения не загружен MIDI-эталон, поэтому точное сравнение с нотами недоступно. Отчёт может
+          быть демонстрационным.
+        </p>
+      )}
+
       <section className="section">
         <h2>Ошибки</h2>
         {report.errors?.length === 0 ? (
@@ -100,11 +107,15 @@ export default function ReportPage() {
 
       <section className="section">
         <h2>Рекомендации</h2>
-        <ul className="recommendation-list">
-          {report.recommendations?.map((rec) => (
-            <li key={rec.id}>{rec.text}</li>
-          ))}
-        </ul>
+        {report.recommendations?.length ? (
+          <ul className="recommendation-list">
+            {report.recommendations.map((rec) => (
+              <li key={rec.id}>{rec.text}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="empty-text">Рекомендации появятся после анализа найденных ошибок.</p>
+        )}
       </section>
 
       <Link to="/progress" className="btn btn-outline">

@@ -292,6 +292,15 @@ textarea:focus {
   transform: translateY(-2px);
 }
 
+.library-card[role='button'] {
+  cursor: pointer;
+}
+
+.library-card[role='button']:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 3px;
+}
+
 .card-action {
   margin-top: 12px;
 }
@@ -659,12 +668,31 @@ textarea:focus {
   margin: 0;
 }
 
-.suggest-form {
-  max-width: 560px;
-  margin: 0;
+.upload-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 520px) 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
-.suggest-section {
-  margin-top: 48px;
-  padding-top: 24px;
+.upload-details {
+  min-height: 260px;
+}
+
+.material-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.suggest-form {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+@media (max-width: 860px) {
+  .upload-layout {
+    grid-template-columns: 1fr;
+  }
 }

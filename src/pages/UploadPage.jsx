@@ -12,6 +12,8 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const selectedComposition = compositions.find((item) => String(item.id) === String(compositionId));
+
   useEffect(() => {
     const presetId = searchParams.get('compositionId');
     compositionsApi
@@ -51,42 +53,95 @@ export default function UploadPage() {
       <h1>Загрузка аудио</h1>
       <p className="lead">Загрузите запись исполнения (WAV или MP3) для анализа.</p>
 
-      <form onSubmit={handleSubmit} className="form-card upload-form">
-        <div className="form-group">
-          <label htmlFor="composition">Произведение</label>
-          <select
-            id="composition"
-            value={compositionId}
-            onChange={(e) => setCompositionId(e.target.value)}
-            required
-          >
-            <option value="">— Выберите —</option>
-            {compositions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title} — {c.composer}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="upload-layout">
+        <form onSubmit={handleSubmit} className="form-card upload-form">
+          <div className="form-group">
+            <label htmlFor="composition">Произведение</label>
+            <select
+              id="composition"
+              value={compositionId}
+              onChange={(e) => setCompositionId(e.target.value)}
+              required
+            >
+              <option value="">— Выберите —</option>
+              {compositions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title} — {c.composer}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="audio">Аудиофайл</label>
-          <input
-            id="audio"
-            type="file"
-            accept=".wav,.mp3,audio/wav,audio/mpeg"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            required
-          />
-          {file && <small className="text-muted">Выбран: {file.name}</small>}
-        </div>
+          <div className="form-group">
+            <label htmlFor="audio">Аудиофайл</label>
+            <input
+              id="audio"
+              type="file"
+              accept=".wav,.mp3,audio/wav,audio/mpeg"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              required
+            />
+            {file && <small className="text-muted">Выбран: {file.name}</small>}
+          </div>
 
-        {error && <p className="error-text">{error}</p>}
+          {error && <p className="error-text">{error}</p>}
 
-        <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-          {loading ? 'Анализ…' : 'Загрузить и проанализировать'}
-        </button>
-      </form>
+          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+            {loading ? 'Анализ…' : 'Загрузить и проанализировать'}
+          </button>
+        </form>
+
+        <aside className="card upload-details">
+          {selectedComposition ? (
+            <>
+              <h2>{selectedComposition.title}</h2>
+              <p className="text-muted">{selectedComposition.composer}</p>
+              <div className="card-tags">
+                <span className="tag">{selectedComposition.instrument}</span>
+                <span className="tag">{selectedComposition.difficulty}</span>
+                <span className="tag">
+                  {selectedComposition.material_type === 'exercise' ? 'упражнение' : 'произведение'}
+                </span>
+              </div>
+              {selectedComposition.sheet_notes && <p>{selectedComposition.sheet_notes}</p>}
+
+              <div className="material-links">
+                {selectedComposition.sheet_file_path ? (
+                  <a
+                    href={compositionsApi.fileUrl(selectedComposition.id, 'sheet')}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-outline btn-sm"
+                  >
+                    Открыть ноты
+                  </a>
+                ) : (
+                  <p className="empty-text">Ноты не добавлены</p>
+                )}
+                {selectedComposition.reference_audio_path ? (
+                  <a
+                    href={compositionsApi.fileUrl(selectedComposition.id, 'reference-audio')}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-outline btn-sm"
+                  >
+                    Прослушать эталон
+                  </a>
+                ) : (
+                  <p className="empty-text">Эталонная запись не добавлена</p>
+                )}
+                <p className="text-muted">
+                  {selectedComposition.midi_path
+                    ? 'MIDI загружен: анализ будет сравнивать запись с эталонными нотами.'
+                    : 'MIDI не добавлен: точное сравнение с эталонными нотами недоступно.'}
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="empty-text">Выберите произведение, чтобы увидеть ноты и эталонную запись.</p>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }
