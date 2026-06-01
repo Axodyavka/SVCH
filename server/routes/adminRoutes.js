@@ -8,6 +8,7 @@ const {
   Recording,
   Report,
   CompositionSuggestion,
+  Notification,
 } = require('../models');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
@@ -140,6 +141,14 @@ router.put('/suggestions/:id/approve', async (req, res, next) => {
 
     suggestion.status = 'approved';
     await suggestion.save();
+
+    await Notification.create({
+      user_id: suggestion.user_id,
+      type: 'suggestion_approved',
+      title: `Произведение «${suggestion.title}» принято в библиотеку`,
+      link: '/library',
+    });
+
     res.json({ message: 'Произведение добавлено в библиотеку' });
   } catch (error) {
     next(error);
@@ -156,6 +165,14 @@ router.put('/suggestions/:id/reject', async (req, res, next) => {
 
     suggestion.status = 'rejected';
     await suggestion.save();
+
+    await Notification.create({
+      user_id: suggestion.user_id,
+      type: 'suggestion_rejected',
+      title: `Произведение «${suggestion.title}» отклонено`,
+      link: '/suggest',
+    });
+
     res.json({ message: 'Предложение отклонено' });
   } catch (error) {
     next(error);

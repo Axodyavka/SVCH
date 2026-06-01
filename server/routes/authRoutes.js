@@ -98,7 +98,7 @@ router.put(
   ],
   async (req, res, next) => {
     try {
-      const { login, email, instrument, level, avatar } = req.body;
+      const { login, email, instrument, avatar } = req.body;
       const user = req.user;
 
       if (login && login !== user.login) {
@@ -114,7 +114,6 @@ router.put(
       }
 
       if (instrument !== undefined) user.instrument = instrument;
-      if (level !== undefined) user.level = level;
       if (avatar !== undefined) user.avatar = avatar;
 
       await user.save();

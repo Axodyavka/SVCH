@@ -40,10 +40,6 @@ const User = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
-    level: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-    },
     registration_date: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -66,8 +62,8 @@ User.beforeUpdate(async (user) => {
 });
 
 User.prototype.toSafeJSON = function toSafeJSON() {
-  const { id, login, email, role, avatar, status, instrument, level, registration_date } = this;
-  return { id, login, email, role, avatar, status, instrument, level, registration_date };
+  const { id, login, email, role, avatar, status, instrument, registration_date } = this;
+  return { id, login, email, role, avatar, status, instrument, registration_date };
 };
 
 module.exports = User;

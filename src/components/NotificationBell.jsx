@@ -50,7 +50,12 @@ function NotificationBell() {
       <button
         type="button"
         className="btn btn-outline btn-icon"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => {
+            if (!v) load();
+            return !v;
+          });
+        }}
         title="Уведомления"
       >
         Уведомления

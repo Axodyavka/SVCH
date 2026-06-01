@@ -11,7 +11,6 @@ export default function ProfilePage() {
     login: user?.login || '',
     email: user?.email || '',
     instrument: user?.instrument || '',
-    level: user?.level || '',
   });
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
   const [achievements, setAchievements] = useState([]);
@@ -89,19 +88,6 @@ export default function ProfilePage() {
             <option value="Скрипка">Скрипка</option>
             <option value="Гитара">Гитара</option>
             <option value="Флейта">Флейта</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="level">Уровень</label>
-          <select
-            id="level"
-            value={profile.level}
-            onChange={(e) => setProfile((p) => ({ ...p, level: e.target.value }))}
-          >
-            <option value="">—</option>
-            <option value="Начинающий">Начинающий</option>
-            <option value="Средний">Средний</option>
-            <option value="Продвинутый">Продвинутый</option>
           </select>
         </div>
         <button type="submit" className="btn btn-primary">
