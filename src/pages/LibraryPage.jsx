@@ -213,10 +213,10 @@ export default function LibraryPage() {
   const visibleCompositions = compositions.slice(pageStart, pageStart + ITEMS_PER_PAGE);
 
   useEffect(() => {
-    if (page > pageCount) {
+    if (!loading && page > pageCount) {
       setPage(pageCount);
     }
-  }, [page, pageCount]);
+  }, [loading, page, pageCount]);
 
   return (
     <div className="page">

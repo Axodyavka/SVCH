@@ -101,10 +101,10 @@ export default function ProgressPage() {
   const visibleReports = reports.slice(pageStart, pageStart + REPORTS_PER_PAGE);
 
   useEffect(() => {
-    if (page > pageCount) {
+    if (!loading && page > pageCount) {
       setPage(pageCount);
     }
-  }, [page, pageCount]);
+  }, [loading, page, pageCount]);
 
   return (
     <div className="page">
