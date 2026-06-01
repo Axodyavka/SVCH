@@ -1,5 +1,7 @@
 const express = require('express');
 const { Op } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
 const {
   User,
   Composition,
@@ -10,6 +12,13 @@ const {
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 const router = express.Router();
+const serverRoot = path.join(__dirname, '..');
+
+function resolveStoredPath(storedPath) {
+  if (!storedPath) return null;
+  if (path.isAbsolute(storedPath)) return storedPath;
+  return path.join(serverRoot, storedPath);
+}
 
 router.use(protect, adminOnly);
 
@@ -86,6 +95,30 @@ router.get('/suggestions', async (_req, res, next) => {
   }
 });
 
+router.get('/suggestions/:id/files/:kind', async (req, res, next) => {
+  try {
+    const suggestion = await CompositionSuggestion.findByPk(req.params.id);
+    if (!suggestion) return res.status(404).json({ message: 'Предложение не найдено' });
+
+    const fileMap = {
+      midi: suggestion.midi_path,
+      sheet: suggestion.sheet_file_path,
+      audio: suggestion.reference_audio_path,
+    };
+    const storedPath = fileMap[req.params.kind];
+    if (!storedPath) return res.status(404).json({ message: 'Файл не найден' });
+
+    const fullPath = resolveStoredPath(storedPath);
+    if (!fullPath || !fs.existsSync(fullPath)) {
+      return res.status(404).json({ message: 'Файл не найден на сервере' });
+    }
+
+    return res.sendFile(fullPath);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.put('/suggestions/:id/approve', async (req, res, next) => {
   try {
     const suggestion = await CompositionSuggestion.findByPk(req.params.id);
@@ -97,9 +130,10 @@ router.put('/suggestions/:id/approve', async (req, res, next) => {
     await Composition.create({
       title: suggestion.title,
       composer: suggestion.composer,
-      instrument: suggestion.instrument || 'piano',
-      difficulty: 'easy',
+      instrument: suggestion.instrument || 'Фортепиано',
+      difficulty: suggestion.difficulty || 'Легкий',
       material_type: 'composition',
+      midi_path: suggestion.midi_path,
       sheet_file_path: suggestion.sheet_file_path,
       reference_audio_path: suggestion.reference_audio_path,
     });

@@ -25,6 +25,18 @@ const CompositionSuggestion = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
+    difficulty: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: 'Легкий',
+      validate: {
+        isIn: [['Легкий', 'Средний', 'Сложный']],
+      },
+    },
+    midi_path: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
     reference_audio_path: {
       type: DataTypes.STRING(500),
       allowNull: true,

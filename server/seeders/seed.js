@@ -21,7 +21,7 @@ const titles = [
   'Менуэт', 'Сонатина', 'Гамма до мажор', 'Вальс', 'Марш', 'Баркарола', 'Ноктюрн',
   'Адажио', 'Скерцо', 'Рондо', 'Каприс', 'Баллада', 'Фантазия', 'Пассаж', 'Полонез',
 ];
-const instruments = ['piano', 'violin', 'guitar', 'flute'];
+const instruments = ['Фортепиано', 'Скрипка', 'Гитара', 'Флейта'];
 const errorTypes = ['wrong_pitch', 'missing_note', 'early', 'late', 'articulation'];
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -53,7 +53,7 @@ async function seed() {
           password: 'pass123',
           role: 'musician',
           instrument: pick(instruments),
-          level: pick(['beginner', 'intermediate', 'advanced']),
+          level: pick(['Начинающий', 'Средний', 'Продвинутый']),
         }),
       );
     }
@@ -65,7 +65,7 @@ async function seed() {
           title: titles[i],
           composer: composers[i % composers.length],
           instrument: instruments[i % instruments.length],
-          difficulty: pick(['easy', 'medium', 'hard']),
+          difficulty: pick(['Легкий', 'Средний', 'Сложный']),
           material_type: i === 7 || i === 18 ? 'exercise' : 'composition',
           midi_path: null,
           sheet_notes:

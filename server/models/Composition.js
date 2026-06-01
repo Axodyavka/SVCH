@@ -22,8 +22,11 @@ const Composition = sequelize.define(
       allowNull: false,
     },
     difficulty: {
-      type: DataTypes.ENUM('easy', 'medium', 'hard'),
-      defaultValue: 'easy',
+      type: DataTypes.STRING(30),
+      defaultValue: 'Легкий',
+      validate: {
+        isIn: [['Легкий', 'Средний', 'Сложный']],
+      },
     },
     material_type: {
       type: DataTypes.STRING(30),

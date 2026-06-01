@@ -59,7 +59,7 @@ const adminMediaUpload = multer({
     }
     if (file.fieldname === 'referenceAudio') {
       if (['.mp3', '.wav', '.mpeg'].includes(ext)) cb(null, true);
-      else cb(new Error('Аудио: допустимы только WAV и MP3'));
+      else cb(new Error('Аудиозапись: допустимы только WAV и MP3'));
       return;
     }
     cb(new Error('Неизвестный тип файла'));
@@ -112,6 +112,7 @@ router.post(
   '/suggest',
   protect,
   adminMediaUpload.fields([
+    { name: 'midi', maxCount: 1 },
     { name: 'sheet', maxCount: 1 },
     { name: 'referenceAudio', maxCount: 1 },
   ]),
@@ -119,6 +120,10 @@ router.post(
     body('title').trim().notEmpty().withMessage('Укажите название'),
     body('composer').trim().notEmpty().withMessage('Укажите композитора'),
     body('instrument').trim().notEmpty().withMessage('Укажите инструмент'),
+    body('difficulty')
+      .optional()
+      .isIn(['Легкий', 'Средний', 'Сложный'])
+      .withMessage('Укажите корректную сложность'),
   ],
   async (req, res, next) => {
     try {
@@ -131,7 +136,7 @@ router.post(
         return res.status(400).json({ message: 'Загрузите файл нот' });
       }
       if (!req.files?.referenceAudio?.[0]) {
-        return res.status(400).json({ message: 'Загрузите эталонную запись' });
+        return res.status(400).json({ message: 'Загрузите аудиозапись для прослушивания' });
       }
 
       const suggestion = await CompositionSuggestion.create({
@@ -139,6 +144,8 @@ router.post(
         title: req.body.title,
         composer: req.body.composer,
         instrument: req.body.instrument,
+        difficulty: req.body.difficulty || 'Легкий',
+        midi_path: req.files.midi?.[0] ? toRelativePath(req.files.midi[0].path) : null,
         sheet_file_path: toRelativePath(req.files.sheet[0].path),
         reference_audio_path: toRelativePath(req.files.referenceAudio[0].path),
         status: 'pending',
@@ -217,7 +224,7 @@ router.post(
         title: req.body.title,
         composer: req.body.composer,
         instrument: req.body.instrument,
-        difficulty: req.body.difficulty || 'easy',
+        difficulty: req.body.difficulty || 'Легкий',
         material_type: req.body.material_type || 'composition',
         sheet_notes: req.body.sheet_notes || null,
       });
