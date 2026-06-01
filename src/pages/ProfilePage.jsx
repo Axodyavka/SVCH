@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { authApi } from '../api/authApi';
 import { setUser } from '../store/slices/authSlice';
-import { setTheme } from '../store/slices/uiSlice';
 
 export default function ProfilePage() {
   const dispatch = useDispatch();
@@ -41,15 +40,6 @@ export default function ProfilePage() {
     } catch (err) {
       setError(err.response?.data?.message || 'Ошибка смены пароля');
     }
-  };
-
-  const handleResetSettings = () => {
-    localStorage.removeItem('reportSort');
-    localStorage.removeItem('reportDateFrom');
-    localStorage.removeItem('reportDateTo');
-    localStorage.setItem('theme', 'light');
-    dispatch(setTheme('light'));
-    setMessage('Настройки сброшены');
   };
 
   return (
@@ -132,18 +122,6 @@ export default function ProfilePage() {
           Изменить пароль
         </button>
       </form>
-
-      <div className="form-card settings-card">
-        <div className="settings-illustration" aria-hidden="true" />
-        <div>
-          <h2>Настройки интерфейса</h2>
-          <p className="text-muted">Сбросить тему, сортировку и фильтры дат.</p>
-          <button type="button" className="btn btn-outline btn-with-icon" onClick={handleResetSettings}>
-            <span className="asset-icon reset-icon" aria-hidden="true" />
-            <span>Сбросить настройки</span>
-          </button>
-        </div>
-      </div>
 
       {message && <p className="success-text">{message}</p>}
       {error && <p className="error-text">{error}</p>}

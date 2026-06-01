@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
-import { toggleTheme } from '../store/slices/uiSlice';
+import { setTheme, toggleTheme } from '../store/slices/uiSlice';
 import NotificationBell from './NotificationBell';
 
 function Header() {
@@ -13,6 +13,13 @@ function Header() {
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
+  };
+
+  const handleResetSettings = () => {
+    localStorage.removeItem('reportSort');
+    localStorage.removeItem('reportDateFrom');
+    localStorage.removeItem('reportDateTo');
+    dispatch(setTheme('light'));
   };
 
   const logoTitle = isAdmin ? 'Music Platform Admin' : 'Music Platform';
@@ -38,9 +45,23 @@ function Header() {
         </nav>
         <div className="header-actions">
           {isAuthenticated && !isAdmin && <NotificationBell />}
-          <button type="button" className="btn btn-outline btn-with-icon theme-toggle" onClick={() => dispatch(toggleTheme())}>
+          <button
+            type="button"
+            className="btn btn-outline icon-btn theme-toggle"
+            onClick={() => dispatch(toggleTheme())}
+            title="Сменить тему"
+            aria-label="Сменить тему"
+          >
             <span className="asset-icon theme-icon" aria-hidden="true" />
-            <span>Сменить тему</span>
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline icon-btn"
+            onClick={handleResetSettings}
+            title="Сбросить настройки интерфейса"
+            aria-label="Сбросить настройки интерфейса"
+          >
+            <span className="asset-icon reset-icon" aria-hidden="true" />
           </button>
           {isAuthenticated ? (
             <>
