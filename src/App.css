@@ -207,19 +207,19 @@ a:hover {
 }
 
 .theme-icon {
-  background-image: url('/images/theme-toggle-light.png');
+  background-image: url('/images/theme-toggle-light.svg');
 }
 
 .reset-icon {
-  background-image: url('/images/reset-settings-light.png');
+  background-image: url('/images/reset-settings-light.svg');
 }
 
 [data-theme='dark'] .theme-icon {
-  background-image: url('/images/theme-toggle-dark.png');
+  background-image: url('/images/theme-toggle-dark.svg');
 }
 
 [data-theme='dark'] .reset-icon {
-  background-image: url('/images/reset-settings-dark.png');
+  background-image: url('/images/reset-settings-dark.svg');
 }
 
 .form-card {
