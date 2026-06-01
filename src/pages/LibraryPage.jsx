@@ -6,22 +6,62 @@ import { adminApi } from '../api/adminApi';
 
 const INSTRUMENTS = [
   { value: '', label: 'Все инструменты' },
-  { value: 'piano', label: 'Фортепиано' },
-  { value: 'violin', label: 'Скрипка' },
-  { value: 'guitar', label: 'Гитара' },
-  { value: 'flute', label: 'Флейта' },
+  { value: 'Фортепиано', label: 'Фортепиано' },
+  { value: 'Скрипка', label: 'Скрипка' },
+  { value: 'Гитара', label: 'Гитара' },
+  { value: 'Флейта', label: 'Флейта' },
 ];
+
+const SORT_OPTIONS = [
+  { value: '', label: 'От А до Я' },
+  { value: 'title-desc', label: 'От Я до А' },
+  { value: 'difficulty-asc', label: 'Сначала легкие' },
+  { value: 'difficulty-desc', label: 'Сначала сложные' },
+];
+
+const DIFFICULTY_ORDER = {
+  Легкий: 1,
+  Средний: 2,
+  Сложный: 3,
+};
 
 const ITEMS_PER_PAGE = 8;
 
 const EMPTY_ADMIN_FORM = {
   title: '',
   composer: '',
-  instrument: 'piano',
-  difficulty: 'easy',
+  instrument: 'Фортепиано',
+  difficulty: 'Легкий',
   material_type: 'composition',
   sheet_notes: '',
 };
+
+function getInitialInstrumentFilter() {
+  const storedInstrument = localStorage.getItem('libraryInstrument') || '';
+  return INSTRUMENTS.some((item) => item.value === storedInstrument) ? storedInstrument : '';
+}
+
+function getInitialSort() {
+  const storedSort = localStorage.getItem('librarySort') || '';
+  return SORT_OPTIONS.some((item) => item.value === storedSort) ? storedSort : '';
+}
+
+function sortCompositions(items, sort) {
+  const sorted = [...items];
+  if (sort === 'difficulty-asc' || sort === 'difficulty-desc') {
+    const direction = sort === 'difficulty-asc' ? 1 : -1;
+    return sorted.sort((a, b) => {
+      const difficultyDiff =
+        ((DIFFICULTY_ORDER[a.difficulty] || 0) - (DIFFICULTY_ORDER[b.difficulty] || 0)) * direction;
+      if (difficultyDiff !== 0) return difficultyDiff;
+      return a.title.localeCompare(b.title, 'ru');
+    });
+  }
+  if (sort === 'title-desc') {
+    return sorted.sort((a, b) => b.title.localeCompare(a.title, 'ru'));
+  }
+  return sorted;
+}
 
 function fileNameFromPath(storedPath) {
   if (!storedPath) return '';
@@ -35,7 +75,8 @@ export default function LibraryPage() {
   const [compositions, setCompositions] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [search, setSearch] = useState(localStorage.getItem('librarySearch') || '');
-  const [instrument, setInstrument] = useState(localStorage.getItem('libraryInstrument') || '');
+  const [instrument, setInstrument] = useState(getInitialInstrumentFilter);
+  const [sort, setSort] = useState(getInitialSort);
   const [page, setPage] = useState(Number(localStorage.getItem('libraryPage')) || 1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,7 +113,8 @@ export default function LibraryPage() {
   useEffect(() => {
     localStorage.setItem('librarySearch', search);
     localStorage.setItem('libraryInstrument', instrument);
-  }, [search, instrument]);
+    localStorage.setItem('librarySort', sort);
+  }, [search, instrument, sort]);
 
   useEffect(() => {
     localStorage.setItem('libraryPage', String(page));
@@ -82,6 +124,7 @@ export default function LibraryPage() {
     const handleReset = () => {
       setSearch('');
       setInstrument('');
+      setSort('');
       setPage(1);
     };
     window.addEventListener('app-settings-reset', handleReset);
@@ -101,6 +144,12 @@ export default function LibraryPage() {
   useEffect(() => {
     loadSuggestions();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!suggestMsg) return undefined;
+    const timer = setTimeout(() => setSuggestMsg(''), 3500);
+    return () => clearTimeout(timer);
+  }, [suggestMsg]);
 
   const resetAdminForm = () => {
     setEditingId(null);
@@ -181,7 +230,7 @@ export default function LibraryPage() {
     try {
       await adminApi.approveSuggestion(id);
       setSuggestMsg('Предложение одобрено и добавлено в библиотеку');
-      loadSuggestions();
+      setSuggestions((items) => items.filter((item) => item.id !== id));
       load();
     } catch (err) {
       setError(err.response?.data?.message || 'Ошибка одобрения предложения');
@@ -192,16 +241,28 @@ export default function LibraryPage() {
     try {
       await adminApi.rejectSuggestion(id);
       setSuggestMsg('Предложение отклонено');
-      loadSuggestions();
+      setSuggestions((items) => items.filter((item) => item.id !== id));
     } catch (err) {
       setError(err.response?.data?.message || 'Ошибка отклонения предложения');
     }
   };
 
-  const pageCount = Math.max(1, Math.ceil(compositions.length / ITEMS_PER_PAGE));
+  const handleOpenSuggestionFile = async (id, kind) => {
+    try {
+      const file = await adminApi.getSuggestionFile(id, kind);
+      const url = URL.createObjectURL(file);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch {
+      setError('Не удалось открыть файл предложения');
+    }
+  };
+
+  const sortedCompositions = sortCompositions(compositions, sort);
+  const pageCount = Math.max(1, Math.ceil(sortedCompositions.length / ITEMS_PER_PAGE));
   const safePage = Math.min(page, pageCount);
   const pageStart = (safePage - 1) * ITEMS_PER_PAGE;
-  const visibleCompositions = compositions.slice(pageStart, pageStart + ITEMS_PER_PAGE);
+  const visibleCompositions = sortedCompositions.slice(pageStart, pageStart + ITEMS_PER_PAGE);
 
   useEffect(() => {
     if (!loading && page > pageCount) {
@@ -244,9 +305,9 @@ export default function LibraryPage() {
                 value={adminForm.difficulty}
                 onChange={(e) => setAdminForm((p) => ({ ...p, difficulty: e.target.value }))}
               >
-                <option value="easy">Легкий</option>
-                <option value="medium">Средний</option>
-                <option value="hard">Сложный</option>
+                <option value="Легкий">Легкий</option>
+                <option value="Средний">Средний</option>
+                <option value="Сложный">Сложный</option>
               </select>
               <select
                 value={adminForm.material_type}
@@ -259,7 +320,7 @@ export default function LibraryPage() {
 
             <div className="file-upload-grid">
               <label className="file-field">
-                <span>MIDI-файл (.mid)</span>
+                <span>MIDI-эталон для анализа (.mid)</span>
                 <input
                   type="file"
                   accept=".mid,.midi,audio/midi"
@@ -289,7 +350,7 @@ export default function LibraryPage() {
               </label>
 
               <label className="file-field">
-                <span>Эталонное аудио (WAV, MP3)</span>
+                <span>Аудиозапись для прослушивания (WAV, MP3)</span>
                 <input
                   type="file"
                   accept=".wav,.mp3,audio/wav,audio/mpeg"
@@ -326,9 +387,8 @@ export default function LibraryPage() {
           </form>
 
           <p className="text-muted">
-            Выберите файлы на компьютере — они сохраняются на сервере в{' '}
-            <code>server/uploads/</code>. В базе хранится только ссылка на файл. MIDI используется для
-            анализа, файл нот показывается пользователю, эталонное аудио можно открыть и прослушать.
+            MIDI используется для анализа, файл нот показывается пользователю, аудиозапись можно открыть и
+            прослушать.
           </p>
         </section>
       )}
@@ -336,57 +396,83 @@ export default function LibraryPage() {
       {isAdmin && (
         <section className="section">
           <h2>Модерация предложений</h2>
-          {suggestions.length === 0 ? (
+          {suggestions.filter((s) => s.status === 'pending').length === 0 ? (
             <p className="empty-text">Нет предложений</p>
           ) : (
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Название</th>
-                    <th>Композитор</th>
-                    <th>Инструмент</th>
-                    <th>Автор</th>
-                    <th>Статус</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {suggestions.map((s) => (
-                    <tr key={s.id}>
-                      <td>{s.title}</td>
-                      <td>{s.composer}</td>
-                      <td>{s.instrument || 'piano'}</td>
-                      <td>{s.user?.login}</td>
-                      <td>{s.status}</td>
-                      <td>
-                        {s.status === 'pending' && (
-                          <div className="table-actions">
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleApproveSuggestion(s.id)}
-                            >
-                              Одобрить
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline btn-sm"
-                              onClick={() => handleRejectSuggestion(s.id)}
-                            >
-                              Отклонить
-                            </button>
-                          </div>
+            <div className="card-grid moderation-grid">
+              {suggestions
+                .filter((s) => s.status === 'pending')
+                .map((s) => (
+                  <article key={s.id} className="card library-card">
+                    <div className="library-card-body">
+                      <h3>{s.title}</h3>
+                      <p className="text-muted">{s.composer}</p>
+                      <div className="card-tags">
+                        <span className="tag">{s.instrument || 'Фортепиано'}</span>
+                        <span className="tag">{s.difficulty || 'Легкий'}</span>
+                        <span className="tag">ожидает решения</span>
+                      </div>
+                      <p className="text-muted">Автор предложения: {s.user?.login || 'не указан'}</p>
+                      <div className="suggestion-file-links">
+                        {s.midi_path ? (
+                          <button
+                            type="button"
+                            className="inline-link"
+                            onClick={() => handleOpenSuggestionFile(s.id, 'midi')}
+                          >
+                            MIDI-эталон
+                          </button>
+                        ) : (
+                          <span className="text-muted">MIDI-эталон не добавлен</span>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {s.sheet_file_path && (
+                          <button
+                            type="button"
+                            className="inline-link"
+                            onClick={() => handleOpenSuggestionFile(s.id, 'sheet')}
+                          >
+                            Ноты
+                          </button>
+                        )}
+                        {s.reference_audio_path && (
+                          <button
+                            type="button"
+                            className="inline-link"
+                            onClick={() => handleOpenSuggestionFile(s.id, 'audio')}
+                          >
+                            Аудиозапись
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="card-admin-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => handleApproveSuggestion(s.id)}
+                      >
+                        Одобрить
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={() => handleRejectSuggestion(s.id)}
+                      >
+                        Отклонить
+                      </button>
+                    </div>
+                  </article>
+                ))}
             </div>
           )}
         </section>
       )}
+
+      <section className="section section-spaced library-materials-section">
+        <h2>Все материалы</h2>
+        <p className="text-muted">Произведения и упражнения для анализа записей</p>
+      </section>
 
       <div className="filters">
         <input
@@ -407,6 +493,19 @@ export default function LibraryPage() {
           }}
         >
           {INSTRUMENTS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => {
+            setSort(e.target.value);
+            setPage(1);
+          }}
+        >
+          {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>
@@ -439,43 +538,47 @@ export default function LibraryPage() {
               }
             }}
           >
-            <h3>{c.title}</h3>
-            <p className="text-muted">{c.composer}</p>
-            <div className="card-tags">
-              <span className="tag">{c.material_type === 'exercise' ? 'упражнение' : 'произведение'}</span>
-              <span className="tag">{c.instrument}</span>
-              <span className="tag">{c.difficulty}</span>
-            </div>
-            <p className="text-muted">{c.midi_path ? 'MIDI: загружен' : 'MIDI: не добавлен'}</p>
-            {c.sheet_file_path && (
+            <div className="library-card-body">
+              <h3>{c.title}</h3>
+              <p className="text-muted">{c.composer}</p>
+              <div className="card-tags">
+                <span className="tag">{c.material_type === 'exercise' ? 'упражнение' : 'произведение'}</span>
+                <span className="tag">{c.instrument}</span>
+                <span className="tag">{c.difficulty}</span>
+              </div>
               <p className="text-muted">
-                Ноты:{' '}
-                <a
-                  className="inline-link"
-                  href={compositionsApi.fileUrl(c.id, 'sheet')}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  открыть файл
-                </a>
+                {c.midi_path ? 'MIDI-эталон: загружен' : 'MIDI-эталон: не добавлен'}
               </p>
-            )}
-            {c.reference_audio_path && (
-              <p className="text-muted">
-                Эталон:{' '}
-                <a
-                  className="inline-link"
-                  href={compositionsApi.fileUrl(c.id, 'reference-audio')}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                >
+              {c.sheet_file_path && (
+                <p className="text-muted">
+                  Ноты:{' '}
+                  <a
+                    className="inline-link"
+                    href={compositionsApi.fileUrl(c.id, 'sheet')}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    открыть файл
+                  </a>
+                </p>
+              )}
+              {c.reference_audio_path && (
+                <p className="text-muted">
+                  Аудиозапись:{' '}
+                  <a
+                    className="inline-link"
+                    href={compositionsApi.fileUrl(c.id, 'reference-audio')}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                   прослушать
-                </a>
-              </p>
-            )}
-            {c.sheet_notes && <p className="text-muted">{c.sheet_notes}</p>}
+                  </a>
+                </p>
+              )}
+              {c.sheet_notes && <p className="text-muted library-card-description">{c.sheet_notes}</p>}
+            </div>
 
             {isAdmin && (
               <div className="card-admin-actions">

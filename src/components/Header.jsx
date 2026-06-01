@@ -22,6 +22,7 @@ function Header() {
     localStorage.removeItem('reportPage');
     localStorage.removeItem('librarySearch');
     localStorage.removeItem('libraryInstrument');
+    localStorage.removeItem('librarySort');
     localStorage.removeItem('libraryPage');
     dispatch(setTheme('light'));
     window.dispatchEvent(new Event('app-settings-reset'));

@@ -85,10 +85,10 @@ export default function ProfilePage() {
             onChange={(e) => setProfile((p) => ({ ...p, instrument: e.target.value }))}
           >
             <option value="">—</option>
-            <option value="piano">Фортепиано</option>
-            <option value="violin">Скрипка</option>
-            <option value="guitar">Гитара</option>
-            <option value="flute">Флейта</option>
+            <option value="Фортепиано">Фортепиано</option>
+            <option value="Скрипка">Скрипка</option>
+            <option value="Гитара">Гитара</option>
+            <option value="Флейта">Флейта</option>
           </select>
         </div>
         <div className="form-group">
@@ -99,9 +99,9 @@ export default function ProfilePage() {
             onChange={(e) => setProfile((p) => ({ ...p, level: e.target.value }))}
           >
             <option value="">—</option>
-            <option value="beginner">Начинающий</option>
-            <option value="intermediate">Средний</option>
-            <option value="advanced">Продвинутый</option>
+            <option value="Начинающий">Начинающий</option>
+            <option value="Средний">Средний</option>
+            <option value="Продвинутый">Продвинутый</option>
           </select>
         </div>
         <button type="submit" className="btn btn-primary">

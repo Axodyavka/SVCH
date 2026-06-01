@@ -51,7 +51,10 @@ export default function UploadPage() {
   return (
     <div className="page">
       <h1>Загрузка аудио</h1>
-      <p className="lead">Загрузите запись исполнения (WAV или MP3) для анализа.</p>
+      <p className="lead">
+        Загрузите свою запись исполнения. Для анализа она сравнивается с MIDI-эталоном, а аудиозапись
+        произведения можно прослушать как пример.
+      </p>
 
       <div className="upload-layout">
         <form onSubmit={handleSubmit} className="form-card upload-form">
@@ -125,20 +128,22 @@ export default function UploadPage() {
                     rel="noreferrer"
                     className="btn btn-outline btn-sm"
                   >
-                    Прослушать эталон
+                    Прослушать аудиозапись
                   </a>
                 ) : (
-                  <p className="empty-text">Эталонная запись не добавлена</p>
+                  <p className="empty-text">Аудиозапись для прослушивания не добавлена</p>
                 )}
                 <p className="text-muted">
                   {selectedComposition.midi_path
-                    ? 'MIDI загружен: анализ будет сравнивать запись с эталонными нотами.'
-                    : 'MIDI не добавлен: точное сравнение с эталонными нотами недоступно.'}
+                    ? 'MIDI-эталон загружен: анализ будет сравнивать запись с эталонными нотами.'
+                    : 'MIDI-эталон не добавлен: точное сравнение с эталонными нотами недоступно.'}
                 </p>
               </div>
             </>
           ) : (
-            <p className="empty-text">Выберите произведение, чтобы увидеть ноты и эталонную запись.</p>
+            <p className="empty-text">
+              Выберите произведение, чтобы увидеть ноты, аудиозапись для прослушивания и статус MIDI-эталона.
+            </p>
           )}
         </aside>
       </div>

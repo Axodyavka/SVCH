@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { compositionsApi } from '../api/compositionsApi';
 
 const INSTRUMENTS = [
-  { value: 'piano', label: 'Фортепиано' },
-  { value: 'violin', label: 'Скрипка' },
-  { value: 'guitar', label: 'Гитара' },
-  { value: 'flute', label: 'Флейта' },
+  { value: 'Фортепиано', label: 'Фортепиано' },
+  { value: 'Скрипка', label: 'Скрипка' },
+  { value: 'Гитара', label: 'Гитара' },
+  { value: 'Флейта', label: 'Флейта' },
 ];
 
 export default function SuggestCompositionPage() {
@@ -14,8 +14,10 @@ export default function SuggestCompositionPage() {
   const [form, setForm] = useState({
     title: '',
     composer: '',
-    instrument: 'piano',
+    instrument: 'Фортепиано',
+    difficulty: 'Легкий',
   });
+  const [midiFile, setMidiFile] = useState(null);
   const [sheetFile, setSheetFile] = useState(null);
   const [referenceAudioFile, setReferenceAudioFile] = useState(null);
   const [message, setMessage] = useState('');
@@ -32,7 +34,7 @@ export default function SuggestCompositionPage() {
       return;
     }
     if (!referenceAudioFile) {
-      setError('Загрузите эталонную запись');
+      setError('Загрузите аудиозапись для прослушивания');
       return;
     }
 
@@ -42,6 +44,8 @@ export default function SuggestCompositionPage() {
       formData.append('title', form.title);
       formData.append('composer', form.composer);
       formData.append('instrument', form.instrument);
+      formData.append('difficulty', form.difficulty);
+      if (midiFile) formData.append('midi', midiFile);
       formData.append('sheet', sheetFile);
       formData.append('referenceAudio', referenceAudioFile);
 
@@ -59,8 +63,8 @@ export default function SuggestCompositionPage() {
     <div className="page">
       <h1>Предложить произведение</h1>
       <p className="lead">
-        Заполните данные произведения и приложите файлы. Администратор проверит заявку и добавит материал
-        в библиотеку.
+        Заполните данные произведения и приложите файлы. Аудиозапись нужна, чтобы пользователь мог
+        послушать пример исполнения, а MIDI-эталон используется для точного анализа.
       </p>
 
       <form onSubmit={handleSubmit} className="form-card suggest-form">
@@ -101,6 +105,20 @@ export default function SuggestCompositionPage() {
         </div>
 
         <div className="form-group">
+          <label htmlFor="difficulty">Уровень сложности</label>
+          <select
+            id="difficulty"
+            value={form.difficulty}
+            onChange={(e) => setForm((p) => ({ ...p, difficulty: e.target.value }))}
+            required
+          >
+            <option value="Легкий">Легкий</option>
+            <option value="Средний">Средний</option>
+            <option value="Сложный">Сложный</option>
+          </select>
+        </div>
+
+        <div className="form-group">
           <label htmlFor="sheet">Файл нот</label>
           <input
             id="sheet"
@@ -113,7 +131,18 @@ export default function SuggestCompositionPage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="referenceAudio">Эталонная запись</label>
+          <label htmlFor="midi">MIDI-эталон для анализа</label>
+          <input
+            id="midi"
+            type="file"
+            accept=".mid,.midi,audio/midi"
+            onChange={(e) => setMidiFile(e.target.files?.[0] || null)}
+          />
+          {midiFile && <small className="text-muted">Выбран: {midiFile.name}</small>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="referenceAudio">Аудиозапись для прослушивания</label>
           <input
             id="referenceAudio"
             type="file"

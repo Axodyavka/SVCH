@@ -260,6 +260,34 @@ textarea {
   font: inherit;
 }
 
+input[type='file'] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+input[type='file']::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+}
+
+input[type='file']::file-selector-button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -296,6 +324,71 @@ textarea:focus {
   cursor: pointer;
 }
 
+.library-card {
+  display: flex;
+  flex-direction: column;
+  height: 360px;
+}
+
+.library-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.library-card-body h3,
+.library-card-body p {
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+}
+
+.library-card-body h3 {
+  min-height: 2.4em;
+  -webkit-line-clamp: 2;
+}
+
+.library-card-body p {
+  -webkit-line-clamp: 1;
+}
+
+.library-card-body .library-card-description {
+  -webkit-line-clamp: 3;
+}
+
+.library-card-body .card-tags {
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.moderation-grid {
+  margin-top: 16px;
+}
+
+.suggestion-file-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.suggestion-file-links .inline-link {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.suggestion-file-links .inline-link:hover {
+  text-decoration: underline;
+}
+
 .library-card[role='button']:focus {
   outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
   outline-offset: 3px;
@@ -306,10 +399,12 @@ textarea:focus {
 }
 
 .card-admin-actions {
-  margin-top: 14px;
+  margin-top: auto;
+  padding-top: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .card-admin-actions input[type='file'] {
@@ -351,7 +446,7 @@ textarea:focus {
 }
 
 .file-field input[type='file'] {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .notes-textarea {
@@ -396,6 +491,20 @@ textarea:focus {
 
 .section {
   margin-top: 32px;
+}
+
+.section-spaced {
+  margin-top: 44px;
+}
+
+.library-materials-section {
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.library-materials-section h2,
+.library-materials-section p {
+  margin-bottom: 8px;
 }
 
 .section-header {
