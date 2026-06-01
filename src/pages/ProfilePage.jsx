@@ -15,7 +15,8 @@ export default function ProfilePage() {
   });
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
   const [achievements, setAchievements] = useState([]);
-  const [message, setMessage] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileError, setProfileError] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState('');
@@ -29,14 +30,14 @@ export default function ProfilePage() {
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setError('');
+    setProfileMessage('');
+    setProfileError('');
     try {
       const data = await authApi.updateProfile(profile);
       dispatch(setUser(data.user));
-      setMessage('Профиль сохранён');
+      setProfileMessage('Настройки профиля сохранены');
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка сохранения');
+      setProfileError(err.response?.data?.message || 'Ошибка сохранения');
     }
   };
 
@@ -106,6 +107,8 @@ export default function ProfilePage() {
         <button type="submit" className="btn btn-primary">
           Сохранить
         </button>
+        {profileMessage && <p className="success-text">{profileMessage}</p>}
+        {profileError && <p className="error-text">{profileError}</p>}
       </form>
 
       <form onSubmit={handlePasswordChange} className="form-card">
@@ -169,7 +172,6 @@ export default function ProfilePage() {
         )}
       </section>
 
-      {message && <p className="success-text">{message}</p>}
       {error && <p className="error-text">{error}</p>}
     </div>
   );

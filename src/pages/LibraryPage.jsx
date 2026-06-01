@@ -383,15 +383,15 @@ export default function LibraryPage() {
           <article
             key={c.id}
             className="card library-card"
-            role={!isAdmin && c.midi_path ? 'button' : undefined}
-            tabIndex={!isAdmin && c.midi_path ? 0 : undefined}
+            role={!isAdmin ? 'button' : undefined}
+            tabIndex={!isAdmin ? 0 : undefined}
             onClick={() => {
-              if (!isAdmin && c.midi_path) {
+              if (!isAdmin) {
                 window.location.hash = `#/upload?compositionId=${c.id}`;
               }
             }}
             onKeyDown={(e) => {
-              if (!isAdmin && c.midi_path && (e.key === 'Enter' || e.key === ' ')) {
+              if (!isAdmin && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 window.location.hash = `#/upload?compositionId=${c.id}`;
               }
@@ -408,7 +408,13 @@ export default function LibraryPage() {
             {c.sheet_file_path && (
               <p className="text-muted">
                 Ноты:{' '}
-                <a className="inline-link" href={compositionsApi.fileUrl(c.id, 'sheet')} target="_blank" rel="noreferrer">
+                <a
+                  className="inline-link"
+                  href={compositionsApi.fileUrl(c.id, 'sheet')}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   открыть файл
                 </a>
               </p>
@@ -421,6 +427,7 @@ export default function LibraryPage() {
                   href={compositionsApi.fileUrl(c.id, 'reference-audio')}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   прослушать
                 </a>
@@ -428,18 +435,36 @@ export default function LibraryPage() {
             )}
             {c.sheet_notes && <p className="text-muted">{c.sheet_notes}</p>}
 
-            {isAuthenticated && !isAdmin && c.midi_path && (
-              <a href={`/#/upload?compositionId=${c.id}`} className="btn btn-outline btn-sm card-action">
+            {isAuthenticated && !isAdmin && (
+              <a
+                href={`/#/upload?compositionId=${c.id}`}
+                className="btn btn-outline btn-sm card-action"
+                onClick={(e) => e.stopPropagation()}
+              >
                 Перейти к практике
               </a>
             )}
 
             {isAdmin && (
               <div className="card-admin-actions">
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => handleEdit(c)}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(c);
+                  }}
+                >
                   Редактировать
                 </button>
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => handleDelete(c.id)}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(c.id);
+                  }}
+                >
                   Удалить
                 </button>
               </div>
