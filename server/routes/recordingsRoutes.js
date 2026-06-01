@@ -5,6 +5,7 @@ const fs = require('fs');
 const { Recording, Composition, Notification } = require('../models');
 const { protect } = require('../middleware/authMiddleware');
 const { analyzeRecording } = require('../services/analysisService');
+const { awardAvailableAchievements } = require('../services/achievementService');
 
 const router = express.Router();
 
@@ -64,6 +65,7 @@ router.post('/', protect, upload.single('audio'), async (req, res, next) => {
         title: 'Отчёт готов',
         link: `/reports/${report.id}`,
       });
+      await awardAvailableAchievements(req.user.id);
 
       res.status(201).json({ recording, reportId: report.id });
     } catch (err) {

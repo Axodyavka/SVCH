@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { authApi } from '../api/authApi';
+import { achievementsApi } from '../api/achievementsApi';
 import { setUser } from '../store/slices/authSlice';
 
 export default function ProfilePage() {
@@ -13,8 +14,16 @@ export default function ProfilePage() {
     level: user?.level || '',
   });
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
+  const [achievements, setAchievements] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    achievementsApi
+      .getAll()
+      .then(setAchievements)
+      .catch(() => setError('Не удалось загрузить достижения'));
+  }, []);
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -122,6 +131,39 @@ export default function ProfilePage() {
           Изменить пароль
         </button>
       </form>
+
+      <section className="section">
+        <h2>Достижения</h2>
+        {achievements.length === 0 ? (
+          <p className="empty-text">Достижения появятся после первых занятий.</p>
+        ) : (
+          <div className="achievement-grid">
+            {achievements.map((achievement) => {
+              const percent = Math.min(100, Math.round((achievement.progress / achievement.target) * 100));
+              return (
+                <article
+                  key={achievement.code}
+                  className={`card achievement-card ${achievement.isEarned ? 'earned' : ''}`}
+                >
+                  <div className="achievement-header">
+                    <h3>{achievement.title}</h3>
+                    <span className="tag">{achievement.isEarned ? 'получено' : `${percent}%`}</span>
+                  </div>
+                  <p className="text-muted">{achievement.description}</p>
+                  <div className="progress-bar" aria-label={`Прогресс ${achievement.title}`}>
+                    <span style={{ width: `${percent}%` }} />
+                  </div>
+                  <small className="text-muted">
+                    {achievement.isEarned
+                      ? `Получено: ${new Date(achievement.earned_at).toLocaleDateString('ru-RU')}`
+                      : `${achievement.progress} из ${achievement.target}`}
+                  </small>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {message && <p className="success-text">{message}</p>}
       {error && <p className="error-text">{error}</p>}
