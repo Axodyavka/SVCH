@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 import { reportsApi } from '../api/reportsApi';
 import { recommendationsApi } from '../api/recommendationsApi';
 
@@ -14,6 +24,7 @@ export default function DashboardPage() {
   const isAdmin = user?.role === 'admin';
   const [recent, setRecent] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +34,28 @@ export default function DashboardPage() {
     }
     const load = async () => {
       try {
-        const [recentData, recData] = await Promise.all([
+        const [recentData, recData, progressData] = await Promise.all([
           reportsApi.getRecent(),
           recommendationsApi.getAll(),
+          reportsApi.getProgress(),
         ]);
         setRecent(recentData);
-        setRecommendations(recData);
+        setRecommendations(
+          recData.filter(
+            (rec, index, items) =>
+              index === items.findIndex((item) => item.text.trim().toLowerCase() === rec.text.trim().toLowerCase()),
+          ),
+        );
+        setChartData(
+          progressData.map((report, index) => ({
+            name: `#${index + 1}`,
+            total: report.total_score,
+            intonation: report.intonation,
+            rhythm: report.rhythm,
+            articulation: report.articulation,
+            date: new Date(report.created_at).toLocaleDateString('ru-RU'),
+          })),
+        );
       } catch {
         /* ignore */
       } finally {
@@ -88,6 +115,29 @@ export default function DashboardPage() {
               </div>
             )}
           </section>
+
+          {chartData.length > 0 && (
+            <section className="section chart-section">
+              <div className="section-header">
+                <h2>График прогресса</h2>
+                <Link to="/progress" className="btn btn-outline btn-sm">
+                  Подробнее
+                </Link>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="total" name="Общий" stroke="#4f46e5" />
+                  <Line type="monotone" dataKey="intonation" name="Интонация" stroke="#16a34a" />
+                  <Line type="monotone" dataKey="rhythm" name="Ритм" stroke="#ca8a04" />
+                </LineChart>
+              </ResponsiveContainer>
+            </section>
+          )}
 
           <section className="section">
             <h2>Рекомендации</h2>
