@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   LineChart,
@@ -23,7 +23,6 @@ const SORT_OPTIONS = [
 const REPORTS_PER_PAGE = 8;
 
 export default function ProgressPage() {
-  const didInitFilters = useRef(false);
   const [reports, setReports] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,14 +39,6 @@ export default function ProgressPage() {
     localStorage.setItem('reportDateFrom', dateFrom);
     localStorage.setItem('reportDateTo', dateTo);
   }, [dateFrom, dateTo]);
-
-  useEffect(() => {
-    if (didInitFilters.current) {
-      setPage(1);
-    } else {
-      didInitFilters.current = true;
-    }
-  }, [sort, dateFrom, dateTo]);
 
   useEffect(() => {
     localStorage.setItem('reportPage', String(page));
@@ -116,15 +107,35 @@ export default function ProgressPage() {
       </div>
 
       <div className="filters">
-        <select value={sort} onChange={(e) => setSort(e.target.value)}>
+        <select
+          value={sort}
+          onChange={(e) => {
+            setSort(e.target.value);
+            setPage(1);
+          }}
+        >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
           ))}
         </select>
-        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => {
+            setDateFrom(e.target.value);
+            setPage(1);
+          }}
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => {
+            setDateTo(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {chartData.length > 0 && (

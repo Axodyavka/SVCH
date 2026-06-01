@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { compositionsApi } from '../api/compositionsApi';
@@ -31,7 +31,6 @@ function fileNameFromPath(storedPath) {
 export default function LibraryPage() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const isAdmin = user?.role === 'admin';
-  const didInitFilters = useRef(false);
 
   const [compositions, setCompositions] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -88,14 +87,6 @@ export default function LibraryPage() {
     window.addEventListener('app-settings-reset', handleReset);
     return () => window.removeEventListener('app-settings-reset', handleReset);
   }, []);
-
-  useEffect(() => {
-    if (didInitFilters.current) {
-      setPage(1);
-    } else {
-      didInitFilters.current = true;
-    }
-  }, [search, instrument]);
 
   const loadSuggestions = async () => {
     if (!isAdmin) return;
@@ -402,10 +393,19 @@ export default function LibraryPage() {
           type="search"
           placeholder="Поиск по названию или композитору"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="search-input"
         />
-        <select value={instrument} onChange={(e) => setInstrument(e.target.value)}>
+        <select
+          value={instrument}
+          onChange={(e) => {
+            setInstrument(e.target.value);
+            setPage(1);
+          }}
+        >
           {INSTRUMENTS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
