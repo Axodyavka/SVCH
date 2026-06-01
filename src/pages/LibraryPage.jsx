@@ -12,6 +12,8 @@ const INSTRUMENTS = [
   { value: 'flute', label: 'Флейта' },
 ];
 
+const ITEMS_PER_PAGE = 8;
+
 const EMPTY_ADMIN_FORM = {
   title: '',
   composer: '',
@@ -34,6 +36,7 @@ export default function LibraryPage() {
   const [suggestions, setSuggestions] = useState([]);
   const [search, setSearch] = useState('');
   const [instrument, setInstrument] = useState('');
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [suggestMsg, setSuggestMsg] = useState('');
@@ -64,6 +67,10 @@ export default function LibraryPage() {
   useEffect(() => {
     const timer = setTimeout(load, 300);
     return () => clearTimeout(timer);
+  }, [search, instrument]);
+
+  useEffect(() => {
+    setPage(1);
   }, [search, instrument]);
 
   const loadSuggestions = async () => {
@@ -175,6 +182,9 @@ export default function LibraryPage() {
       setError(err.response?.data?.message || 'Ошибка отклонения предложения');
     }
   };
+
+  const pageCount = Math.max(1, Math.ceil(compositions.length / ITEMS_PER_PAGE));
+  const visibleCompositions = compositions.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
     <div className="page">
@@ -379,7 +389,7 @@ export default function LibraryPage() {
       {!loading && compositions.length === 0 && <p className="empty-text">Произведения не найдены</p>}
 
       <div className="card-grid">
-        {compositions.map((c) => (
+        {visibleCompositions.map((c) => (
           <article
             key={c.id}
             className="card library-card"
@@ -435,16 +445,6 @@ export default function LibraryPage() {
             )}
             {c.sheet_notes && <p className="text-muted">{c.sheet_notes}</p>}
 
-            {isAuthenticated && !isAdmin && (
-              <a
-                href={`/#/upload?compositionId=${c.id}`}
-                className="btn btn-outline btn-sm card-action"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Перейти к практике
-              </a>
-            )}
-
             {isAdmin && (
               <div className="card-admin-actions">
                 <button
@@ -472,6 +472,30 @@ export default function LibraryPage() {
           </article>
         ))}
       </div>
+
+      {!loading && compositions.length > ITEMS_PER_PAGE && (
+        <div className="pagination">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => setPage((value) => Math.max(1, value - 1))}
+            disabled={page === 1}
+          >
+            Назад
+          </button>
+          <span className="text-muted">
+            Страница {page} из {pageCount}
+          </span>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
+            disabled={page === pageCount}
+          >
+            Вперёд
+          </button>
+        </div>
+      )}
 
     </div>
   );

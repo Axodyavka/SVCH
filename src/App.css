@@ -593,6 +593,15 @@ textarea:focus {
   flex-wrap: wrap;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
 .inline-form {
   display: flex;
   gap: 8px;

@@ -20,6 +20,8 @@ const SORT_OPTIONS = [
   { value: 'score_asc', label: 'По баллу ↑' },
 ];
 
+const REPORTS_PER_PAGE = 8;
+
 export default function ProgressPage() {
   const [reports, setReports] = useState([]);
   const [chartData, setChartData] = useState([]);
@@ -27,6 +29,7 @@ export default function ProgressPage() {
   const [sort, setSort] = useState(localStorage.getItem('reportSort') || 'date_desc');
   const [dateFrom, setDateFrom] = useState(localStorage.getItem('reportDateFrom') || '');
   const [dateTo, setDateTo] = useState(localStorage.getItem('reportDateTo') || '');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     localStorage.setItem('reportSort', sort);
@@ -36,6 +39,10 @@ export default function ProgressPage() {
     localStorage.setItem('reportDateFrom', dateFrom);
     localStorage.setItem('reportDateTo', dateTo);
   }, [dateFrom, dateTo]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [sort, dateFrom, dateTo]);
 
   useEffect(() => {
     const load = async () => {
@@ -67,6 +74,9 @@ export default function ProgressPage() {
     };
     load();
   }, [sort, dateFrom, dateTo]);
+
+  const pageCount = Math.max(1, Math.ceil(reports.length / REPORTS_PER_PAGE));
+  const visibleReports = reports.slice((page - 1) * REPORTS_PER_PAGE, page * REPORTS_PER_PAGE);
 
   return (
     <div className="page">
@@ -125,7 +135,7 @@ export default function ProgressPage() {
                 </tr>
               </thead>
               <tbody>
-                {reports.map((r) => (
+                {visibleReports.map((r) => (
                   <tr key={r.id}>
                     <td>{r.recording?.composition?.title}</td>
                     <td>{r.total_score}</td>
@@ -139,6 +149,29 @@ export default function ProgressPage() {
                 ))}
               </tbody>
             </table>
+            {reports.length > REPORTS_PER_PAGE && (
+              <div className="pagination">
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  disabled={page === 1}
+                >
+                  Назад
+                </button>
+                <span className="text-muted">
+                  Страница {page} из {pageCount}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
+                  disabled={page === pageCount}
+                >
+                  Вперёд
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>
