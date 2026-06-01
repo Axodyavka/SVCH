@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   LineChart,
@@ -23,13 +23,14 @@ const SORT_OPTIONS = [
 const REPORTS_PER_PAGE = 8;
 
 export default function ProgressPage() {
+  const didInitFilters = useRef(false);
   const [reports, setReports] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState(localStorage.getItem('reportSort') || 'date_desc');
   const [dateFrom, setDateFrom] = useState(localStorage.getItem('reportDateFrom') || '');
   const [dateTo, setDateTo] = useState(localStorage.getItem('reportDateTo') || '');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(Number(localStorage.getItem('reportPage')) || 1);
 
   useEffect(() => {
     localStorage.setItem('reportSort', sort);
@@ -41,8 +42,27 @@ export default function ProgressPage() {
   }, [dateFrom, dateTo]);
 
   useEffect(() => {
-    setPage(1);
+    if (didInitFilters.current) {
+      setPage(1);
+    } else {
+      didInitFilters.current = true;
+    }
   }, [sort, dateFrom, dateTo]);
+
+  useEffect(() => {
+    localStorage.setItem('reportPage', String(page));
+  }, [page]);
+
+  useEffect(() => {
+    const handleReset = () => {
+      setSort('date_desc');
+      setDateFrom('');
+      setDateTo('');
+      setPage(1);
+    };
+    window.addEventListener('app-settings-reset', handleReset);
+    return () => window.removeEventListener('app-settings-reset', handleReset);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -76,7 +96,15 @@ export default function ProgressPage() {
   }, [sort, dateFrom, dateTo]);
 
   const pageCount = Math.max(1, Math.ceil(reports.length / REPORTS_PER_PAGE));
-  const visibleReports = reports.slice((page - 1) * REPORTS_PER_PAGE, page * REPORTS_PER_PAGE);
+  const safePage = Math.min(page, pageCount);
+  const pageStart = (safePage - 1) * REPORTS_PER_PAGE;
+  const visibleReports = reports.slice(pageStart, pageStart + REPORTS_PER_PAGE);
+
+  useEffect(() => {
+    if (page > pageCount) {
+      setPage(pageCount);
+    }
+  }, [page, pageCount]);
 
   return (
     <div className="page">
@@ -155,18 +183,18 @@ export default function ProgressPage() {
                   type="button"
                   className="btn btn-outline btn-sm"
                   onClick={() => setPage((value) => Math.max(1, value - 1))}
-                  disabled={page === 1}
+                  disabled={safePage === 1}
                 >
                   Назад
                 </button>
                 <span className="text-muted">
-                  Страница {page} из {pageCount}
+                  Страница {safePage} из {pageCount}
                 </span>
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"
                   onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
-                  disabled={page === pageCount}
+                  disabled={safePage === pageCount}
                 >
                   Вперёд
                 </button>

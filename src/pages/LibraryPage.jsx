@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { compositionsApi } from '../api/compositionsApi';
@@ -31,12 +31,13 @@ function fileNameFromPath(storedPath) {
 export default function LibraryPage() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const isAdmin = user?.role === 'admin';
+  const didInitFilters = useRef(false);
 
   const [compositions, setCompositions] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [search, setSearch] = useState('');
-  const [instrument, setInstrument] = useState('');
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState(localStorage.getItem('librarySearch') || '');
+  const [instrument, setInstrument] = useState(localStorage.getItem('libraryInstrument') || '');
+  const [page, setPage] = useState(Number(localStorage.getItem('libraryPage')) || 1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [suggestMsg, setSuggestMsg] = useState('');
@@ -70,7 +71,30 @@ export default function LibraryPage() {
   }, [search, instrument]);
 
   useEffect(() => {
-    setPage(1);
+    localStorage.setItem('librarySearch', search);
+    localStorage.setItem('libraryInstrument', instrument);
+  }, [search, instrument]);
+
+  useEffect(() => {
+    localStorage.setItem('libraryPage', String(page));
+  }, [page]);
+
+  useEffect(() => {
+    const handleReset = () => {
+      setSearch('');
+      setInstrument('');
+      setPage(1);
+    };
+    window.addEventListener('app-settings-reset', handleReset);
+    return () => window.removeEventListener('app-settings-reset', handleReset);
+  }, []);
+
+  useEffect(() => {
+    if (didInitFilters.current) {
+      setPage(1);
+    } else {
+      didInitFilters.current = true;
+    }
   }, [search, instrument]);
 
   const loadSuggestions = async () => {
@@ -184,7 +208,15 @@ export default function LibraryPage() {
   };
 
   const pageCount = Math.max(1, Math.ceil(compositions.length / ITEMS_PER_PAGE));
-  const visibleCompositions = compositions.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const safePage = Math.min(page, pageCount);
+  const pageStart = (safePage - 1) * ITEMS_PER_PAGE;
+  const visibleCompositions = compositions.slice(pageStart, pageStart + ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    if (page > pageCount) {
+      setPage(pageCount);
+    }
+  }, [page, pageCount]);
 
   return (
     <div className="page">
@@ -484,13 +516,13 @@ export default function LibraryPage() {
             Назад
           </button>
           <span className="text-muted">
-            Страница {page} из {pageCount}
+            Страница {safePage} из {pageCount}
           </span>
           <button
             type="button"
             className="btn btn-outline btn-sm"
             onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
-            disabled={page === pageCount}
+            disabled={safePage === pageCount}
           >
             Вперёд
           </button>

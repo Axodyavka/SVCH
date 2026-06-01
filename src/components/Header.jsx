@@ -19,7 +19,12 @@ function Header() {
     localStorage.removeItem('reportSort');
     localStorage.removeItem('reportDateFrom');
     localStorage.removeItem('reportDateTo');
+    localStorage.removeItem('reportPage');
+    localStorage.removeItem('librarySearch');
+    localStorage.removeItem('libraryInstrument');
+    localStorage.removeItem('libraryPage');
     dispatch(setTheme('light'));
+    window.dispatchEvent(new Event('app-settings-reset'));
   };
 
   const logoTitle = isAdmin ? 'Music Platform Admin' : 'Music Platform';
