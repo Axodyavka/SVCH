@@ -37,6 +37,7 @@ function Header() {
               {!isAdmin && (
                 <>
                   <Link to="/upload">Загрузка</Link>
+                  <Link to="/suggest">Предложить</Link>
                   <Link to="/progress">Прогресс</Link>
                 </>
               )}

@@ -17,5 +17,10 @@ export const compositionsApi = {
       .then((r) => r.data),
   remove: (id) => api.delete(`/compositions/${id}`).then((r) => r.data),
   fileUrl: (id, kind) => `/api/compositions/${id}/files/${kind}`,
-  suggest: (data) => api.post('/compositions/suggest', data).then((r) => r.data),
+  suggest: (formData) =>
+    api
+      .post('/compositions/suggest', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data),
 };

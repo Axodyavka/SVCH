@@ -25,6 +25,14 @@ const CompositionSuggestion = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
+    reference_audio_path: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    sheet_file_path: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
     status: {
       type: DataTypes.ENUM('pending', 'approved', 'rejected'),
       defaultValue: 'pending',

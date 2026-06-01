@@ -100,6 +100,8 @@ router.put('/suggestions/:id/approve', async (req, res, next) => {
       instrument: suggestion.instrument || 'piano',
       difficulty: 'easy',
       material_type: 'composition',
+      sheet_file_path: suggestion.sheet_file_path,
+      reference_audio_path: suggestion.reference_audio_path,
     });
 
     suggestion.status = 'approved';

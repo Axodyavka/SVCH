@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LibraryPage from './pages/LibraryPage';
+import SuggestCompositionPage from './pages/SuggestCompositionPage';
 import UploadPage from './pages/UploadPage';
 import ReportPage from './pages/ReportPage';
 import ProgressPage from './pages/ProgressPage';
@@ -44,6 +45,14 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/library" element={<LibraryPage />} />
+          <Route
+            path="/suggest"
+            element={
+              <PrivateRoute musicianOnly>
+                <SuggestCompositionPage />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/upload"
             element={

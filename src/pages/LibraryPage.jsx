@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { compositionsApi } from '../api/compositionsApi';
 import { adminApi } from '../api/adminApi';
@@ -35,7 +36,6 @@ export default function LibraryPage() {
   const [instrument, setInstrument] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [suggestForm, setSuggestForm] = useState({ title: '', composer: '' });
   const [suggestMsg, setSuggestMsg] = useState('');
   const [adminForm, setAdminForm] = useState(EMPTY_ADMIN_FORM);
   const [editingId, setEditingId] = useState(null);
@@ -98,18 +98,6 @@ export default function LibraryPage() {
     if (sheetFile) formData.append('sheet', sheetFile);
     if (referenceAudioFile) formData.append('referenceAudio', referenceAudioFile);
     return formData;
-  };
-
-  const handleSuggest = async (e) => {
-    e.preventDefault();
-    setSuggestMsg('');
-    try {
-      await compositionsApi.suggest(suggestForm);
-      setSuggestForm({ title: '', composer: '' });
-      setSuggestMsg('Предложение отправлено администратору');
-    } catch (err) {
-      setSuggestMsg(err.response?.data?.message || 'Ошибка отправки');
-    }
   };
 
   const handleAdminSubmit = async (e) => {
@@ -445,25 +433,14 @@ export default function LibraryPage() {
       </div>
 
       {isAuthenticated && !isAdmin && (
-        <section className="section suggest-section">
+        <section className="section suggest-section card">
           <h2>Предложить произведение</h2>
-          <form onSubmit={handleSuggest} className="inline-form">
-            <input
-              placeholder="Название"
-              value={suggestForm.title}
-              onChange={(e) => setSuggestForm((p) => ({ ...p, title: e.target.value }))}
-              required
-            />
-            <input
-              placeholder="Композитор"
-              value={suggestForm.composer}
-              onChange={(e) => setSuggestForm((p) => ({ ...p, composer: e.target.value }))}
-              required
-            />
-            <button type="submit" className="btn btn-primary">
-              Отправить
-            </button>
-          </form>
+          <p className="text-muted">
+            Если в библиотеке нет нужного материала, отправьте заявку с нотами и эталонной записью.
+          </p>
+          <Link to="/suggest" className="btn btn-primary">
+            Открыть форму предложения
+          </Link>
         </section>
       )}
     </div>

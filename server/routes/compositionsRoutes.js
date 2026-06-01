@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const multer = require('multer');
-const { Composition } = require('../models');
+const { Composition, CompositionSuggestion } = require('../models');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -111,9 +111,14 @@ router.get('/', async (req, res, next) => {
 router.post(
   '/suggest',
   protect,
+  adminMediaUpload.fields([
+    { name: 'sheet', maxCount: 1 },
+    { name: 'referenceAudio', maxCount: 1 },
+  ]),
   [
     body('title').trim().notEmpty().withMessage('Укажите название'),
     body('composer').trim().notEmpty().withMessage('Укажите композитора'),
+    body('instrument').trim().notEmpty().withMessage('Укажите инструмент'),
   ],
   async (req, res, next) => {
     try {
@@ -121,12 +126,21 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ message: errors.array()[0].msg });
       }
-      const { CompositionSuggestion } = require('../models');
+
+      if (!req.files?.sheet?.[0]) {
+        return res.status(400).json({ message: 'Загрузите файл нот' });
+      }
+      if (!req.files?.referenceAudio?.[0]) {
+        return res.status(400).json({ message: 'Загрузите эталонную запись' });
+      }
+
       const suggestion = await CompositionSuggestion.create({
         user_id: req.user.id,
         title: req.body.title,
         composer: req.body.composer,
-        instrument: req.body.instrument || req.user.instrument,
+        instrument: req.body.instrument,
+        sheet_file_path: toRelativePath(req.files.sheet[0].path),
+        reference_audio_path: toRelativePath(req.files.referenceAudio[0].path),
         status: 'pending',
       });
       res.status(201).json(suggestion);
