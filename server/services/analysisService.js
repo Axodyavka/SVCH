@@ -6,25 +6,18 @@ const { generateRecommendations } = require('./recommendationService');
 
 const execFileAsync = util.promisify(execFile);
 
-const fallbackResult = () => ({
-  intonation: 72,
-  rhythm: 75,
-  articulation: 70,
-  total: 72,
+const fallbackResult = (reason = 'Автоматический анализ недоступен') => ({
+  intonation: 0,
+  rhythm: 0,
+  articulation: 0,
+  total: 0,
   errors: [
     {
-      type: 'wrong_pitch',
-      description: 'Небольшое отклонение высоты ноты',
-      expected_value: 'E4',
-      actual_value: 'Eb4',
-      time_sec: 1.0,
-    },
-    {
-      type: 'late',
-      description: 'Задержка начала ноты',
-      expected_value: '0 ms',
-      actual_value: '120 ms',
-      time_sec: 2.5,
+      type: 'analysis_unavailable',
+      description: reason,
+      expected_value: '',
+      actual_value: '',
+      time_sec: null,
     },
   ],
 });
@@ -38,8 +31,11 @@ async function runPythonAnalysis(audioPath, midiPath) {
       timeout: 120000,
     });
     return JSON.parse(stdout);
-  } catch {
-    return fallbackResult();
+  } catch (error) {
+    console.error('Python analysis failed:', error.message);
+    if (error.stderr) console.error(error.stderr);
+    if (error.stdout) console.error(error.stdout);
+    return fallbackResult('Не удалось выполнить Python-анализ записи.');
   }
 }
 
