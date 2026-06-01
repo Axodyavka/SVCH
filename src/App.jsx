@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -18,6 +18,9 @@ import { setTheme } from './store/slices/uiSlice';
 
 function HomePage() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
   if (isAuthenticated && user?.role === 'admin') {
     return <Navigate to="/library" replace />;
   }
@@ -26,7 +29,9 @@ function HomePage() {
 
 function App() {
   const dispatch = useDispatch();
+  const location = useLocation();
   const theme = useSelector((state) => state.ui.theme);
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -38,7 +43,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header />
+      {!isAuthPage && <Header />}
       <main className="main-content">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -88,7 +93,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
-      <Footer />
+      {!isAuthPage && <Footer />}
     </div>
   );
 }
