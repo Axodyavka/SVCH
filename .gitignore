@@ -28,9 +28,8 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Загружаемые файлы (аудио пользователей — не в git)
-server/uploads/*
-!server/uploads/.gitkeep
+# Загружаемые файлы
+# (демо-файлы и эталоны теперь коммитятся для развёртывания)
 
 # Python
 __pycache__/
