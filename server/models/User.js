@@ -28,14 +28,6 @@ const User = sequelize.define(
       type: DataTypes.ENUM('musician', 'admin'),
       defaultValue: 'musician',
     },
-    avatar: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    status: {
-      type: DataTypes.ENUM('active', 'blocked'),
-      defaultValue: 'active',
-    },
     instrument: {
       type: DataTypes.STRING(100),
       allowNull: true,
@@ -62,8 +54,8 @@ User.beforeUpdate(async (user) => {
 });
 
 User.prototype.toSafeJSON = function toSafeJSON() {
-  const { id, login, email, role, avatar, status, instrument, registration_date } = this;
-  return { id, login, email, role, avatar, status, instrument, registration_date };
+  const { id, login, email, role, instrument, registration_date } = this;
+  return { id, login, email, role, instrument, registration_date };
 };
 
 module.exports = User;

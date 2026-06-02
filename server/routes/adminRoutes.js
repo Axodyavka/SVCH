@@ -1,5 +1,4 @@
 const express = require('express');
-const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
 const {
@@ -34,51 +33,6 @@ router.get('/stats', async (_req, res, next) => {
       CompositionSuggestion.count({ where: { status: 'pending' } }),
     ]);
     res.json({ users, musicians, admins, recordings, reports, pendingSuggestions: suggestions });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/users', async (req, res, next) => {
-  try {
-    const { search, status } = req.query;
-    const where = {};
-    if (status) where.status = status;
-    if (search) {
-      where[Op.or] = [
-        { login: { [Op.iLike]: `%${search}%` } },
-        { email: { [Op.iLike]: `%${search}%` } },
-      ];
-    }
-    const users = await User.findAll({ where, order: [['registration_date', 'DESC']] });
-    res.json(users.map((u) => u.toSafeJSON()));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.put('/users/:id/block', async (req, res, next) => {
-  try {
-    const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
-    if (user.role === 'admin') {
-      return res.status(400).json({ message: 'Нельзя заблокировать администратора' });
-    }
-    user.status = 'blocked';
-    await user.save();
-    res.json({ message: 'Пользователь заблокирован' });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.put('/users/:id/unblock', async (req, res, next) => {
-  try {
-    const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ message: 'Пользователь не найден' });
-    user.status = 'active';
-    await user.save();
-    res.json({ message: 'Пользователь разблокирован' });
   } catch (error) {
     next(error);
   }

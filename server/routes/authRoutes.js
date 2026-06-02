@@ -68,10 +68,6 @@ router.post(
         return res.status(401).json({ message: 'Неверный логин или пароль' });
       }
 
-      if (user.status === 'blocked') {
-        return res.status(403).json({ message: 'Аккаунт заблокирован' });
-      }
-
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) {
         return res.status(401).json({ message: 'Неверный логин или пароль' });
@@ -98,7 +94,7 @@ router.put(
   ],
   async (req, res, next) => {
     try {
-      const { login, email, instrument, avatar } = req.body;
+      const { login, email, instrument } = req.body;
       const user = req.user;
 
       if (login && login !== user.login) {
@@ -114,7 +110,6 @@ router.put(
       }
 
       if (instrument !== undefined) user.instrument = instrument;
-      if (avatar !== undefined) user.avatar = avatar;
 
       await user.save();
       res.json({ user: user.toSafeJSON() });
