@@ -21,6 +21,20 @@ const reportInclude = [
   { model: Recommendation, as: 'recommendations' },
 ];
 
+function buildDateWhere(dateFrom, dateTo) {
+  const where = {};
+  if (dateFrom || dateTo) {
+    where.created_at = {};
+    if (dateFrom) where.created_at[Op.gte] = new Date(dateFrom);
+    if (dateTo) {
+      const endDate = new Date(dateTo);
+      endDate.setHours(23, 59, 59, 999);
+      where.created_at[Op.lte] = endDate;
+    }
+  }
+  return where;
+}
+
 router.get('/recent', protect, async (req, res, next) => {
   try {
     const reports = await Report.findAll({
@@ -43,7 +57,11 @@ router.get('/recent', protect, async (req, res, next) => {
 
 router.get('/progress', protect, async (req, res, next) => {
   try {
+    const { dateFrom, dateTo } = req.query;
+    const where = buildDateWhere(dateFrom, dateTo);
+
     const reports = await Report.findAll({
+      where,
       attributes: ['id', 'total_score', 'intonation', 'rhythm', 'articulation', 'created_at'],
       include: [
         {
@@ -65,13 +83,7 @@ router.get('/progress', protect, async (req, res, next) => {
 router.get('/', protect, async (req, res, next) => {
   try {
     const { sort = 'date_desc', dateFrom, dateTo } = req.query;
-    const where = {};
-
-    if (dateFrom || dateTo) {
-      where.created_at = {};
-      if (dateFrom) where.created_at[Op.gte] = new Date(dateFrom);
-      if (dateTo) where.created_at[Op.lte] = new Date(dateTo);
-    }
+    const where = buildDateWhere(dateFrom, dateTo);
 
     let order = [['created_at', 'DESC']];
     if (sort === 'date_asc') order = [['created_at', 'ASC']];

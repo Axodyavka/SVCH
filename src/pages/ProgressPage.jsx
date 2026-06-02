@@ -60,11 +60,18 @@ export default function ProgressPage() {
       try {
         setLoading(true);
         const params = { sort };
-        if (dateFrom) params.dateFrom = dateFrom;
-        if (dateTo) params.dateTo = dateTo;
+        const dateParams = {};
+        if (dateFrom) {
+          params.dateFrom = dateFrom;
+          dateParams.dateFrom = dateFrom;
+        }
+        if (dateTo) {
+          params.dateTo = dateTo;
+          dateParams.dateTo = dateTo;
+        }
         const [list, progress] = await Promise.all([
           reportsApi.getAll(params),
-          reportsApi.getProgress(),
+          reportsApi.getProgress(dateParams),
         ]);
         setReports(list);
         setChartData(
