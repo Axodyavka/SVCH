@@ -3,20 +3,16 @@ import { adminApi } from '../api/adminApi';
 
 export default function AdminPage() {
   const [stats, setStats] = useState(null);
-  const [users, setUsers] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [search, setSearch] = useState('');
   const [message, setMessage] = useState('');
 
   const load = async () => {
     try {
-      const [statsData, usersData, suggestionsData] = await Promise.all([
+      const [statsData, suggestionsData] = await Promise.all([
         adminApi.getStats(),
-        adminApi.getUsers({ search }),
         adminApi.getSuggestions(),
       ]);
       setStats(statsData);
-      setUsers(usersData);
       setSuggestions(suggestionsData);
     } catch {
       /* ignore */
@@ -25,13 +21,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     load();
-  }, [search]);
-
-  const handleBlock = async (id, blocked) => {
-    if (blocked) await adminApi.unblockUser(id);
-    else await adminApi.blockUser(id);
-    load();
-  };
+  }, []);
 
   const handleApprove = async (id) => {
     await adminApi.approveSuggestion(id);
@@ -67,51 +57,6 @@ export default function AdminPage() {
       {message && <p className="success-text">{message}</p>}
 
       <section className="section">
-        <h2>Пользователи</h2>
-        <input
-          type="search"
-          placeholder="Поиск…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Логин</th>
-                <th>Email</th>
-                <th>Роль</th>
-                <th>Статус</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.login}</td>
-                  <td>{u.email}</td>
-                  <td>{u.role}</td>
-                  <td>{u.status}</td>
-                  <td>
-                    {u.role !== 'admin' && (
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-sm"
-                        onClick={() => handleBlock(u.id, u.status === 'blocked')}
-                      >
-                        {u.status === 'blocked' ? 'Разблок.' : 'Блок.'}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="section">
         <h2>Предложения произведений</h2>
         {suggestions.length === 0 ? (
           <p className="empty-text">Нет предложений</p>
@@ -121,7 +66,6 @@ export default function AdminPage() {
               <thead>
                 <tr>
                   <th>Название</th>
-                  <th>Композитор</th>
                   <th>Автор</th>
                   <th>Статус</th>
                   <th></th>
@@ -132,11 +76,14 @@ export default function AdminPage() {
                   <tr key={s.id}>
                     <td>{s.title}</td>
                     <td>{s.composer}</td>
-                    <td>{s.user?.login}</td>
                     <td>{s.status}</td>
                     <td>
                       {s.status === 'pending' && (
-                        <button type="button" className="btn btn-primary btn-sm" onClick={() => handleApprove(s.id)}>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleApprove(s.id)}
+                        >
                           Одобрить
                         </button>
                       )}
@@ -148,7 +95,6 @@ export default function AdminPage() {
           </div>
         )}
       </section>
-
     </div>
   );
 }
