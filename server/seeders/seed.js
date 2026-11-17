@@ -92,18 +92,21 @@ async function seed() {
     },
   ]);
 
-  const users = await User.bulkCreate([
-    { login: 'admin', email: 'admin@music.local', password: 'admin123', role: 'admin' },
-    { login: 'admin2', email: 'admin2@music.local', password: 'admin123', role: 'admin' },
-    { login: 'musician1', email: 'musician1@music.local', password: 'pass123', role: 'musician', instrument: 'Фортепиано' },
-    { login: 'musician2', email: 'musician2@music.local', password: 'pass123', role: 'musician', instrument: 'Скрипка' },
-    { login: 'musician3', email: 'musician3@music.local', password: 'pass123', role: 'musician', instrument: 'Гитара' },
-    { login: 'musician4', email: 'musician4@music.local', password: 'pass123', role: 'musician', instrument: 'Флейта' },
-    { login: 'musician5', email: 'musician5@music.local', password: 'pass123', role: 'musician' },
-    { login: 'musician6', email: 'musician6@music.local', password: 'pass123', role: 'musician' },
-    { login: 'musician7', email: 'musician7@music.local', password: 'pass123', role: 'musician' },
-    { login: 'musician8', email: 'musician8@music.local', password: 'pass123', role: 'musician' },
-  ]);
+  const users = await User.bulkCreate(
+    [
+      { login: 'admin', email: 'admin@music.local', password: 'admin123', role: 'admin' },
+      { login: 'admin2', email: 'admin2@music.local', password: 'admin123', role: 'admin' },
+      { login: 'musician1', email: 'musician1@music.local', password: 'pass123', role: 'musician', instrument: 'Фортепиано' },
+      { login: 'musician2', email: 'musician2@music.local', password: 'pass123', role: 'musician', instrument: 'Скрипка' },
+      { login: 'musician3', email: 'musician3@music.local', password: 'pass123', role: 'musician', instrument: 'Гитара' },
+      { login: 'musician4', email: 'musician4@music.local', password: 'pass123', role: 'musician', instrument: 'Флейта' },
+      { login: 'musician5', email: 'musician5@music.local', password: 'pass123', role: 'musician' },
+      { login: 'musician6', email: 'musician6@music.local', password: 'pass123', role: 'musician' },
+      { login: 'musician7', email: 'musician7@music.local', password: 'pass123', role: 'musician' },
+      { login: 'musician8', email: 'musician8@music.local', password: 'pass123', role: 'musician' },
+    ],
+    { individualHooks: true },
+  );
 
   const compositions = await Composition.bulkCreate(
     [

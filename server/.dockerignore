@@ -1,0 +1,12 @@
+node_modules
+.npm
+.env
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+uploads/*
+!uploads/.gitkeep
+*.log
+npm-debug.log*

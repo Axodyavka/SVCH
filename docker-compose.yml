@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # PostgreSQL Database Service
+  # -------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: music_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-music_platform}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./music_platform_dump.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-music_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # Note: port 5432 is intentionally NOT mapped to host for security and network isolation.
+    # It is accessible only internally by the 'backend' service through app_network.
+
+  # -------------------------------------------------------------
+  # Backend API Service (Node.js + Express)
+  # -------------------------------------------------------------
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: music_backend
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-music_platform}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres_password}
+      JWT_SECRET: ${JWT_SECRET:-super_secure_jwt_secret_key_2026}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - app_network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # -------------------------------------------------------------
+  # Frontend Client Service (React + Nginx)
+  # -------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: music_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - app_network
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+# ---------------------------------------------------------------
+# Persistent Data Volumes
+# ---------------------------------------------------------------
+volumes:
+  postgres_data:
+    name: music_postgres_data
+  uploads_data:
+    name: music_uploads_data
+
+# ---------------------------------------------------------------
+# Isolated Bridge Network
+# ---------------------------------------------------------------
+networks:
+  app_network:
+    name: music_network
+    driver: bridge
